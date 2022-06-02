@@ -1,0 +1,43 @@
+@import "mixins";
+@import "props";
+
+// Styles for `InputDirective`.
+.tk-input {
+  @include border(1px solid rgba(black, .2));
+  @include padding(0 10px);
+  background-color: transparent;
+
+  &::placeholder {
+  }
+
+  // Set style for focused state.
+  &:not(.tk-disabled) {
+    &.tk-focused {
+      border: 1px solid black;
+    }
+  }
+
+  // Set style for disabled state.
+  &.tk-disabled {
+    background-color: rgba(black, .2);
+  }
+
+  // Set style for error state.
+  &.ng-dirty, &.ng-touched {
+    &.ng-invalid {
+
+    }
+  }
+}
+
+// Remove number input's arrow button for Chrome, Safari, Edge and Opera.
+.tk-input::-webkit-outer-spin-button,
+.tk-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+// Remove number input's arrow button for Firefox.
+.tk-input[type=number] {
+  -moz-appearance: textfield;
+}

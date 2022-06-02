@@ -1,0 +1,11 @@
+@import "mixins";
+@import "props";
+
+// Backdrop.
+:host {
+  @include box(100%);
+  @include top-left;
+  position: fixed;
+  display: block;
+  background-color: rgba(black, .5);
+}

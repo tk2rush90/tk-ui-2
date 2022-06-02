@@ -1,0 +1,68 @@
+@use "sass:math";
+@import "mixins";
+@import "props";
+
+$height: 20px;
+$button-size: $height;
+
+$track-height: 4px;
+$track-half-height: math.div($track-height, 2);
+$button-half-size: math.div($button-size, 2);
+
+$fill-color: black;
+
+// RangeSlider.
+:host {
+  position: relative;
+  display: block;
+  user-select: none;
+  cursor: pointer;
+  height: $height;
+
+  // Disabled state.
+  &.tk-disabled {
+
+  }
+
+  // Focused state.
+  &:focus {
+
+  }
+
+  // Invalid state.
+  &.ng-dirty, &.ng-touched {
+    &.ng-invalid {
+
+    }
+  }
+}
+
+// Slide track.
+.tk-slide-track {
+  @include rect(100%, $track-height);
+  position: relative;
+  top: 50%;
+  left: 0;
+  margin-top: -#{$track-half-height};
+  background-color: white;
+  border-radius: #{$track-half-height};
+}
+
+// Slide bar.
+.tk-slide-bar {
+  position: absolute;
+  height: 100%;
+  background-color: $fill-color;
+  left: 0;
+  border-radius: #{$track-half-height};
+}
+
+// Slide button.
+.tk-slide-button {
+  @include ball($button-size);
+  position: absolute;
+  top: 50%;
+  margin-top: -#{$button-half-size};
+  margin-left: -#{$button-half-size};
+  background-color: $fill-color;
+}

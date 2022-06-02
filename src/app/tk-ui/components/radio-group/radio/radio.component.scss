@@ -1,0 +1,58 @@
+@import "mixins";
+@import "props";
+
+// Radio button.
+:host {
+  @include flex(center);
+  cursor: pointer;
+  user-select: none;
+
+  // Selected state.
+  &.tk-selected {
+    .tk-radio-ball {
+      transform: scale(1);
+    }
+  }
+
+  // Focused state.
+  // It's `RadioGroupComponent` focused state.
+  // You need to set the styles for when `RadioGroupComponent` focused.
+  &.tk-focused.tk-selected {
+    .tk-radio {
+      border-color: black;
+    }
+  }
+
+  // Disabled state.
+  &.tk-disabled {
+
+  }
+}
+
+// Make radio button and label to be none selectable.
+// It makes user to be able to click only host element.
+// Since the radio button is binding with RippleDirective,
+// if you make radio button to be clickable, the ripple can be triggered twice when user clicks radio button.
+.tk-radio, label {
+  pointer-events: none;
+}
+
+// The radio.
+.tk-radio {
+  @include ball(20px);
+  @include flex(center, center);
+  @include border(1px solid rgba(black, .2));
+}
+
+// The radio ball for selected state.
+.tk-radio-ball {
+  @include ball(10px);
+  background-color: black;
+  transition: transform .3s;
+  transform: scale(0);
+}
+
+// The radio label.
+label {
+  margin-left: 10px;
+}

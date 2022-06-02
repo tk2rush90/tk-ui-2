@@ -1,0 +1,50 @@
+@import "mixins";
+
+:host {
+  position: relative;
+  display: block;
+
+  // When the value of `direction` attribute is `'left'`,
+  // make arrows to be center of vertical.
+  @include attr(direction, left) {
+    .tk-arrow, .tk-arrow-border {
+      @include vertical-center;
+      right: 0;
+    }
+  }
+
+  // When the value of `direction` attribute is `'right'`,
+  // make arrows to be center of vertical.
+  @include attr(direction, right) {
+    .tk-arrow, .tk-arrow-border {
+      @include vertical-center;
+      left: 0;
+    }
+  }
+
+  // When the value of `direction` attribute is `'top'`,
+  // make arrows to be center of horizontal.
+  @include attr(direction, top) {
+    .tk-arrow, .tk-arrow-border {
+      @include horizontal-center;
+      bottom: 0;
+    }
+  }
+
+  // When the value of `direction` attribute is `'bottom'`,
+  // make arrows to be center of horizontal.
+  @include attr(direction, bottom) {
+    .tk-arrow, .tk-arrow-border {
+      @include horizontal-center;
+      top: 0;
+    }
+  }
+}
+
+// Default styles for arrows.
+.tk-arrow, .tk-arrow-border {
+  @include box(0);
+  position: absolute;
+  border-style: solid;
+}
+

@@ -1,0 +1,14 @@
+@import "mixins";
+
+:host {
+  display: block;
+  padding-bottom: 6000px;
+}
+
+.container {
+  width: 600px;
+}
+
+.container + .container {
+  margin-top: 950px;
+}

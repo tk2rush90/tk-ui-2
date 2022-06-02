@@ -1,0 +1,21 @@
+@import "mixins";
+@import "props";
+
+// RouterProgress.
+:host {
+  @include top-left;
+  @include rect(100%, 5px);
+  position: fixed;
+  display: block;
+  z-index: 1003;
+
+  &.tk-progressing {
+    background-color: white;
+  }
+}
+
+.tk-router-progress-bar {
+  height: 100%;
+  position: absolute;
+  background-color: rgba(black, .5);
+}

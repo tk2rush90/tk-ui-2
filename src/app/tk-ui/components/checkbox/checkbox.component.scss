@@ -1,0 +1,40 @@
+@import "mixins";
+@import "props";
+
+$background-color: transparent;
+$border: 1px solid black;
+$border-radius: 5px;
+$checkbox-size: 20px;
+$icon-size: 14px;
+
+// Checkbox.
+:host {
+  @include flex(center, center);
+  @include box($checkbox-size);
+  @include border($border);
+  border-radius: $border-radius;
+  background-color: $background-color;
+  cursor: pointer;
+  user-select: none;
+
+  app-icon {
+    @include box($icon-size);
+  }
+
+  // Focused state.
+  &:focus {
+
+  }
+
+  // Disabled state.
+  &.tk-disabled {
+
+  }
+
+  // Invalid state.
+  &.ng-dirty, &.ng-touched {
+    &.ng-invalid {
+
+    }
+  }
+}

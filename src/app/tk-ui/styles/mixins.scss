@@ -1,0 +1,194 @@
+/// Create flex container.
+/// @param {String} $align - Set `align-items` property.
+/// @param {String} $justify - Set `justify-content` property.
+/// @param {String} $direction - Set `flex-direction` property.
+/// @param {String} $wrap - Set `flex-wrap` property. Default is `'wrap'`.
+@mixin flex($align: null, $justify: null, $direction: null, $wrap: wrap) {
+  display: flex;
+  align-items: $align;
+  justify-content: $justify;
+  flex-direction: $direction;
+  flex-wrap: $wrap;
+}
+
+/// Make container can omit overflowed texts.
+/// @param {Number} $lines - Set multiline ellipsis container with this value.
+@mixin ellipsis($lines: null) {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+
+  @if $lines {
+    display: -webkit-box;
+    -webkit-line-clamp: $lines;
+    -webkit-box-orient: vertical;
+    word-wrap: break-word;
+    white-space: normal;
+  }
+}
+
+/// Set style for specific attribute and value of an element.
+/// @param {String} $name - Define name of attribute.
+/// @param {String} $value - Define value of attribute.
+@mixin attr($name, $value) {
+  &[#{$name}='#{$value}'] {
+    @content;
+  }
+}
+
+/// Set element to top left.
+@mixin top-left {
+  top: 0;
+  left: 0;
+}
+
+/// Set element to top right.
+@mixin top-right {
+  top: 0;
+  right: 0;
+}
+
+/// Set element to bottom left.
+@mixin bottom-left {
+  bottom: 0;
+  left: 0;
+}
+
+/// Set element to bottom right.
+@mixin bottom-right {
+  bottom: 0;
+  right: 0;
+}
+
+/// Set paddings to all sides.
+@mixin padding($padding) {
+  box-sizing: border-box;
+  padding: $padding;
+}
+
+/// Set padding to left side.
+@mixin padding-left($padding) {
+  box-sizing: border-box;
+  padding-left: $padding;
+}
+
+/// Set padding to right side.
+@mixin padding-right($padding) {
+  box-sizing: border-box;
+  padding-right: $padding;
+}
+
+/// Set padding to top side.
+@mixin padding-top($padding) {
+  box-sizing: border-box;
+  padding-top: $padding;
+}
+
+/// Set padding to bottom side.
+@mixin padding-bottom($padding) {
+  box-sizing: border-box;
+  padding-bottom: $padding;
+}
+
+/// Set border to all sides.
+@mixin border($border) {
+  box-sizing: border-box;
+  border: $border;
+}
+
+/// Set border to left side.
+@mixin border-left($border) {
+  box-sizing: border-box;
+  border-left: $border;
+}
+
+/// Set border to right side.
+@mixin border-right($border) {
+  box-sizing: border-box;
+  border-right: $border;
+}
+
+/// Set border to top side.
+@mixin border-top($border) {
+  box-sizing: border-box;
+  border-top: $border;
+}
+
+/// Set border to bottom side.
+@mixin border-bottom($border) {
+  box-sizing: border-box;
+  border-bottom: $border;
+}
+
+/// Create foursquare.
+@mixin box($size) {
+  width: $size;
+  height: $size;
+}
+
+/// Create circle.
+@mixin ball($size) {
+  @include box($size);
+  border-radius: 50%;
+}
+
+/// Create square.
+@mixin rect($width, $height) {
+  width: $width;
+  height: $height;
+}
+
+/// Make flex items to be similar to grid items.
+/// The container must be flex container.
+/// @param {Number} $gap - Gap between each items.
+/// @param {Number} $count - Maximum items in a row.
+@mixin flex-grid($gap, $count) {
+  width: calc((100% - (#{$gap} * #{$count - 1})) / #{$count});
+  margin-right: $gap;
+
+  &:nth-child(#{$count}n) {
+    margin-right: 0;
+  }
+
+  &:nth-child(n + #{$count + 1}) {
+    margin-top: $gap;
+  }
+}
+
+/// Set element to center by vertical.
+@mixin vertical-center {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/// Set element to center by horizontal.
+@mixin horizontal-center {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/// Set element to center by vertical and horizontal.
+@mixin center {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/// Set media query by screen width.
+/// @param {Number} $min - Minimum screen width for media query.
+/// @param {Number} $max - Maximum screen width for media query.
+@mixin media($min: null, $max: null) {
+  @if ($min != null and $max != null) {
+    @media screen and (min-width: $min) and (max-width: $max) {
+      @content;
+    }
+  } @else if ($min == null and $max != null) {
+    @media screen and (max-width: $max) {
+      @content;
+    }
+  } @else if ($min != null and $max == null) {
+    @media screen and (min-width: $min) {
+      @content;
+    }
+  }
+}

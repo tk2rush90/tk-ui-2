@@ -1,0 +1,11 @@
+<!-- The `#optionItem` selector is used from extended class `SelectOptionsBase`. -->
+<div
+  #optionItem
+  (pointerenter)="cursorIndex = optionIndex"
+  (click)="closeOptions(option)"
+  *ngFor="let option of options; let optionIndex = index"
+  [class.tk-selected]="value === option.value"
+  [class.tk-focused]="cursorIndex === optionIndex"
+  class="tk-option">
+  {{option.label}}
+</div>

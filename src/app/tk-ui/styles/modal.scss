@@ -1,0 +1,12 @@
+@import "mixins";
+@import "props";
+
+// The modal styles.
+.tk-modal {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  background-color: white;
+  margin: 0 auto;
+  z-index: 1;
+}

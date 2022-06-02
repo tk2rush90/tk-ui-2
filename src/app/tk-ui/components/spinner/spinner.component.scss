@@ -1,0 +1,8 @@
+@import "mixins";
+@import "props";
+
+// Spinner.
+:host {
+  // Spinner will be always placed in the center of the container.
+  @include flex(center, center);
+}

@@ -1,0 +1,137 @@
+@import "mixins";
+@import "props";
+
+// Calendar for datepicker.
+:host {
+  position: absolute;
+  display: block;
+  width: 260px;
+  background-color: white;
+  box-shadow: 0 3px 6px rgba(black, .15);
+  // It is required because it's an overlay.
+  pointer-events: all;
+}
+
+// The header which contains year/month.
+.tk-calendar-header {
+  @include padding(30px 15px);
+  background-color: rgba(black, .8);
+}
+
+// Today display in the header.
+.tk-calendar-today {
+  font-size: 20px;
+  color: $white;
+}
+
+// The subheader of calendar.
+.tk-calendar-sub-header {
+  @include flex(center, space-between);
+  @include padding(0 15px);
+  height: 50px;
+
+  // Display year and month.
+  span {
+    font-size: 14px;
+  }
+}
+
+// The control container of calendar which is contained in sub header.
+.tk-calendar-controls {
+  @include flex(center, center);
+
+  // Buttons.
+  .tk-button {
+    @include box(20px);
+    @include flex(center, center);
+    cursor: pointer;
+    user-select: none;
+
+    // Icon in buttons.
+    app-icon {
+      @include box(12px);
+    }
+  }
+
+  // Buttons space.
+  .tk-button + .tk-button {
+    margin-left: 10px;
+  }
+}
+
+// Calendar body contains day of weeks and dates.
+.tk-calendar-body {
+  @include padding(0 10px);
+}
+
+// The day of weeks.
+.tk-calendar-day-of-weeks {
+  @include flex(center);
+  height: 30px;
+}
+
+// The item of day of week.
+.tk-calendar-day-of-week-item {
+  @include flex(center, center);
+  width: calc(100% / 7);
+  height: 100%;
+  font-size: 12px;
+}
+
+// The container to render dates.
+.tk-calendar-dates {
+  @include flex();
+}
+
+// Date items.
+.tk-calendar-date-item {
+  @include flex(center, center);
+  @include box(35px);
+  width: calc(100% / 7);
+  height: 35px;
+  user-select: none;
+  font-size: 14px;
+}
+
+// Ball in the date item.
+.tk-calendar-date-ball {
+  @include ball(30px);
+  @include flex(center, center);
+  @include border(2px solid transparent);
+  cursor: pointer;
+
+  // The dates that are included in displaying year and month.
+  &:not(.tk-excluded) {
+  }
+
+  // The dates that are excluded from displaying year and month.
+  &.tk-excluded {
+    color: rgba(black, .5);
+  }
+
+  // For today and hover state.
+  &.tk-today, &:hover {
+    border-color: rgba(black, .2);
+  }
+
+  // Hover on today.
+  &.tk-today:hover {
+    border-color: rgba(black, .4);
+  }
+
+  // Selected date.
+  &.tk-selected {
+    border-color: rgba(blue, .5);
+  }
+}
+
+// The actions container.
+.tk-calendar-actions {
+  @include flex(center, flex-end);
+  @include padding(0 10px);
+  height: 60px;
+
+  button + button {
+    margin-left: 10px;
+  }
+}

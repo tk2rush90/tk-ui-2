@@ -1,0 +1,23 @@
+<!-- Datepicker toggle button. -->
+<div
+  #button
+  (click)="openCalendar()"
+  class="tk-datepicker-button">
+  <!-- Input to display placeholder and date value. -->
+  <input
+    (focus)="moveFocusToHost()"
+    [ngModel]="label"
+    [placeholder]="placeholder"
+    [tabindex]="-1"
+    [class.tk-focused]="focused"
+    [class.tk-disabled]="disabled"
+    readonly
+    appInput/>
+
+  <!-- Calendar icon. -->
+  <app-icon
+    name="default-calendar"></app-icon>
+</div>
+
+<!-- layout to display calendar -->
+<app-overlay-outlet></app-overlay-outlet>

@@ -1,0 +1,78 @@
+<!-- Header. -->
+<div class="tk-calendar-header">
+  <div class="tk-calendar-today">
+    {{today | date: 'EEE, MMMM dd'}}
+  </div>
+</div>
+
+<!-- Sub header. -->
+<div class="tk-calendar-sub-header">
+  <!-- Display current target date of calendar. -->
+  <span>{{targetDate | date: 'MMM yyyy'}}</span>
+
+  <!-- Controls to change the target date. -->
+  <div class="tk-calendar-controls">
+    <button
+      (click)="toPreviousMonth()"
+      [bound]="false"
+      [centered]="true"
+      class="tk-button"
+      appRipple>
+      <app-icon name="default-arrow-left"></app-icon>
+    </button>
+
+    <button
+      (click)="toNextMonth()"
+      [bound]="false"
+      [centered]="true"
+      class="tk-button"
+      appRipple>
+      <app-icon name="default-arrow-right"></app-icon>
+    </button>
+  </div>
+</div>
+
+<!-- The body of calendar. -->
+<div class="tk-calendar-body">
+  <!-- The day of weeks. -->
+  <div class="tk-calendar-day-of-weeks">
+    <div
+      *ngFor="let dayOfWeek of dayOfWeeks"
+      class="tk-calendar-day-of-week-item">
+      {{dayOfWeek}}
+    </div>
+  </div>
+
+  <!-- Container of CalendarDates. -->
+  <div class="tk-calendar-dates">
+    <!-- Render dates. -->
+    <div
+      *ngFor="let date of dates; trackBy: dateTrackBy; let i = index"
+      class="tk-calendar-date-item">
+      <!-- ball -->
+      <div
+        (click)="onDateClick(date)"
+        [class.tk-today]="date.dateObject | isSameDate: today"
+        [class.tk-selected]="date.dateObject | isSameDate: selectedDate"
+        [class.tk-excluded]="date.isExcluded"
+        class="tk-calendar-date-ball">
+        {{date.date}}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Calendar actions. -->
+<div class="tk-calendar-actions">
+  <button
+    (click)="closeOverlay()"
+    appFlatButton>
+    Cancel
+  </button>
+
+  <button
+    (click)="closeOverlay(selectedDate)"
+    appFlatButton>
+    OK
+  </button>
+</div>

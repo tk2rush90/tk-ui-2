@@ -1,0 +1,38 @@
+@import "mixins";
+@import "props";
+
+$icon-size: 14px;
+$icon-right: 10px;
+$input-padding-right: calc(#{$icon-right} * 2 + #{$icon-size});
+
+// Datepicker.
+:host {
+  display: block;
+  height: 30px;
+}
+
+// Button to open calendar.
+.tk-datepicker-button {
+  // Fit to host element.
+  @include box(100%);
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+
+  input {
+    // Fit to button wrapper.
+    @include box(100%);
+    @include ellipsis();
+    @include padding-right($input-padding-right);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  // Calendar icon.
+  app-icon {
+    @include vertical-center;
+    @include box($icon-size);
+    position: absolute;
+    right: $icon-right;
+  }
+}

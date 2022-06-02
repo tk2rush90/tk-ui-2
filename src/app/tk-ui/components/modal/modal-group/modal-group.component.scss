@@ -1,0 +1,13 @@
+@import "mixins";
+@import "props";
+
+// ModalGroup.
+// It contains backdrop and modal.
+:host {
+  @include box(100%);
+  @include top-left;
+  position: fixed;
+  // The `pointer-events` of `ModalOutlet` is `none`.
+  // So, set `all` to `ModalGroup` to make user can trigger events.
+  pointer-events: all;
+}

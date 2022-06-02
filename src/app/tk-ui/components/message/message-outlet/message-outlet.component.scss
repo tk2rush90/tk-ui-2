@@ -1,0 +1,21 @@
+@import "mixins";
+@import "props";
+
+// MessageOutlet.
+:host {
+  @include box(100%);
+  @include padding(20px);
+  @include top-left;
+  // Flex style to position the `MessageComponent`.
+  @include flex(center, flex-end, column);
+  position: fixed;
+  z-index: 1002;
+  // Make user can't select this element.
+  pointer-events: none;
+
+  ::ng-deep {
+    app-message + app-message {
+      margin-top: 5px;
+    }
+  }
+}

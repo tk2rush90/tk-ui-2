@@ -1,0 +1,14 @@
+@import "mixins";
+@import "props";
+
+// ModalOutlet.
+:host {
+  @include box(100%);
+  @include top-left;
+  position: fixed;
+  display: block;
+  z-index: 1001;
+  // The outlet covers the window.
+  // To prevent interrupting user actions by this component, set `pointer-event: none`.
+  pointer-events: none;
+}

@@ -1,0 +1,47 @@
+@import "mixins";
+@import "props";
+
+$option-height: 30px;
+$options-max-height: calc(#{$option-height} * 5);
+
+// Options.
+:host {
+  position: absolute;
+  background-color: white;
+  display: block;
+  pointer-events: all;
+  max-height: $options-max-height;
+  overflow: auto;
+  box-shadow: 0 3px 6px rgba(black, .15);
+  // To draw over the OverlayCover.
+  z-index: 1;
+
+  &:not(.tk-ready) {
+    pointer-events: none;
+  }
+
+  &.tk-ready {
+    pointer-events: all;
+  }
+}
+
+// Option item.
+.tk-option {
+  @include padding(0 10px);
+  @include ellipsis();
+  @include flex(center);
+  height: $option-height;
+  cursor: pointer;
+  user-select: none;
+  font-size: 14px;
+
+  // Selected state.
+  &.tk-selected {
+    font-weight: 700;
+  }
+
+  // Focused state.
+  &.tk-focused {
+    background-color: #eee;
+  }
+}

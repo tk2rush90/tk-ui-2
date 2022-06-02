@@ -1,0 +1,19 @@
+<!-- svg container -->
+<svg
+  (@spin.done)="onSpinDone($event)"
+  [@spin]="spin"
+  [style.width]="size + 'px'"
+  [style.height]="size + 'px'"
+  [attr.viewBox]="viewBox">
+  <!-- render circles -->
+  <circle
+    (@dash.done)="onDashDone($event)"
+    [@dash]="dash"
+    [attr.cx]="center"
+    [attr.cy]="center"
+    [attr.r]="radius"
+    [attr.stroke-dasharray]="dashArray"
+    [attr.stroke-width]="strokeWidth"
+    [attr.stroke]="color"
+    fill="none"/>
+</svg>

@@ -1,0 +1,57 @@
+@import "mixins";
+@import "props";
+
+@mixin disabled {
+  &:disabled {
+    @content;
+  }
+}
+
+@mixin hover {
+  &:not(:disabled) {
+    &:hover {
+      @content;
+    }
+  }
+}
+
+@mixin active {
+  &:not(:disabled) {
+    &:active {
+      @content;
+    }
+  }
+}
+
+@mixin focus {
+  &:not(:disabled) {
+    &:focus {
+      @content;
+    }
+  }
+}
+
+.tk-inline-button {
+  // Common styles for flat button.
+  cursor: pointer;
+  user-select: none;
+
+  // Set customized styles by its color.
+  @include attr('tk-color', '') {
+    @include disabled {
+
+    }
+
+    @include hover {
+
+    }
+
+    @include active {
+
+    }
+
+    @include focus {
+
+    }
+  }
+}

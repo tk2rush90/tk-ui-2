@@ -1,0 +1,27 @@
+<!-- The select button to toggle options visibility. -->
+<div
+  #button
+  (click)="openOptions()"
+  class="tk-select-button">
+  <!-- Read-only input to display value and placeholder. -->
+  <!-- Prevent input focus by moving focus to host element. -->
+  <input
+    #input
+    (ngModelChange)="onInputChange($event)"
+    (keydown)="onInputKeydown($event)"
+    [ngModel]="label"
+    [placeholder]="placeholder"
+    [disabled]="disabled"
+    [class.ng-invalid]="invalid"
+    [class.ng-touched]="touched"
+    [class.ng-dirty]="dirty"
+    appInput/>
+
+  <!-- Down arrow. -->
+  <div class="tk-icon">
+    <app-icon name="default-arrow-down"></app-icon>
+  </div>
+</div>
+
+<!-- layer outlet -->
+<app-overlay-outlet></app-overlay-outlet>

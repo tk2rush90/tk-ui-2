@@ -1,0 +1,11 @@
+@import "mixins";
+@import "props";
+
+// OverlayCover.
+:host {
+  @include box(100%);
+  @include top-left;
+  position: absolute;
+  display: block;
+  pointer-events: all;
+}

@@ -1,0 +1,50 @@
+@import "mixins";
+@import "props";
+
+$icon-size: 10px;
+$icon-right: 10px;
+$input-padding-right: calc(#{$icon-right} * 2 + #{$icon-size});
+
+// Select.
+:host {
+  display: block;
+  user-select: none;
+  height: 30px;
+
+  // Opened state.
+  &.tk-opened {
+    .tk-icon app-icon {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+// Select button.
+.tk-select-button {
+  // Fit to container size.
+  @include box(100%);
+  position: relative;
+  cursor: pointer;
+
+  input {
+    // Fit to button size.
+    @include box(100%);
+    @include padding-right($input-padding-right);
+    @include ellipsis();
+    cursor: pointer;
+  }
+}
+
+// The icon wrapper.
+// Icon needs to be rotated when options are opened, but
+// `vertical-center` already has `transform` property.
+// So, not to interrupt it, use wrapper for `app-icon`
+.tk-icon {
+  @include vertical-center;
+  position: absolute;
+  right: $icon-right;
+
+  app-icon {
+    @include box($icon-size);
+  }
+}

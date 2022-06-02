@@ -1,0 +1,15 @@
+@import "mixins";
+@import "props";
+
+// OverlayOutlet.
+:host {
+  // Cover all screen, but user can't do any action for it.
+  // Every child elements should be positioned with `position: absolute` and
+  // need to be set `pointer-events: all`.
+  @include box(100%);
+  @include top-left;
+  position: fixed;
+  display: block;
+  pointer-events: none;
+  z-index: 1000;
+}
