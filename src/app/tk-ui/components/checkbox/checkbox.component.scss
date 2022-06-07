@@ -1,24 +1,18 @@
 @import "mixins";
 @import "props";
 
-$background-color: transparent;
-$border: 1px solid black;
-$border-radius: 5px;
-$checkbox-size: 20px;
-$icon-size: 14px;
-
 // Checkbox.
 :host {
   @include flex(center, center);
-  @include box($checkbox-size);
-  @include border($border);
-  border-radius: $border-radius;
-  background-color: $background-color;
+  @include box(24px);
+  @include border(1px solid black);
+  border-radius: 5px;
+  background-color: white;
   cursor: pointer;
   user-select: none;
 
   app-icon {
-    @include box($icon-size);
+    @include box(14px);
   }
 
   // Focused state.
@@ -28,7 +22,7 @@ $icon-size: 14px;
 
   // Disabled state.
   &.tk-disabled {
-
+    pointer-events: none;
   }
 
   // Invalid state.

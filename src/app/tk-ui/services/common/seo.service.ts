@@ -43,10 +43,6 @@ export class SeoService {
       keywords = [],
     } = properties;
 
-    // Update canonical and thumbnail url by prefixing `_origin`.
-    canonical = this._origin + canonical;
-    thumbnail = this._origin + thumbnail;
-
     // Set Twitter default meta tag.
     this._addOrUpdateTag('name', 'twitter:card', {
       name: 'twitter:card',
@@ -119,12 +115,12 @@ export class SeoService {
       const link: HTMLLinkElement = this.document.querySelector(`link[rel='canonical']`) || this.document.createElement('link');
 
       link.setAttribute('rel', 'canonical');
-      link.setAttribute('href', canonical);
+      link.setAttribute('href', this._origin + canonical);
 
       // Update OpenGraph url meta tag.
       this._addOrUpdateTag('property', 'og:url', {
         property: 'og:url',
-        content: canonical,
+        content: this._origin + canonical,
       });
     }
 
@@ -133,21 +129,23 @@ export class SeoService {
       // Update Twitter thumbnail meta tag.
       this._addOrUpdateTag('name', 'twitter:image', {
         name: 'twitter:image',
-        content: thumbnail,
+        content: this._origin + thumbnail,
       });
 
       // Update OpenGraph thumbnail meta tag.
       this._addOrUpdateTag('property', 'og:image', {
         property: 'og:image',
-        content: thumbnail,
+        content: this._origin + thumbnail,
       });
     }
 
     // Update default keywords meta tag.
-    this._addOrUpdateTag('name', 'keywords', {
-      name: 'keywords',
-      content: keywords.join(','),
-    });
+    if (keywords.length > 0) {
+      this._addOrUpdateTag('name', 'keywords', {
+        name: 'keywords',
+        content: keywords.join(','),
+      });
+    }
   }
 
   /**
