@@ -15,7 +15,7 @@ import {MessageService} from '@tk-ui/components/message/message.service';
 export class AppComponent implements AfterViewInit {
   title = 'tk-ui-2';
 
-  control = new FormControl('50');
+  control = new FormControl<string>('50');
 
   range = 0;
 
