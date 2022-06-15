@@ -1,223 +1,270 @@
-import {ComponentRef, Injectable, Injector, OnDestroy, Type, ViewContainerRef} from '@angular/core';
+import {
+  ComponentRef,
+  EventEmitter,
+  Injectable,
+  InjectionToken,
+  Injector,
+  OnDestroy,
+  Type,
+  ViewContainerRef
+} from '@angular/core';
 import {OverlayOutletComponent} from '@tk-ui/components/overlay/overlay-outlet/overlay-outlet.component';
-import {ObjectMap} from '@tk-ui/others/types';
-import {OverlayCoverComponent} from '@tk-ui/components/overlay/overlay-cover/overlay-cover.component';
+import {OverlayBackdropComponent} from '@tk-ui/components/overlay/overlay-backdrop/overlay-backdrop.component';
+import {SubscriptionService} from '@tk-ui/services/common/subscription.service';
+import {RandomUtil} from '@tk-ui/utils/random.util';
 
 /**
- * Create the injector for overlay content component.
- * @param viewContainerRef - The `ViewContainerRef` of `OverlayOutlet` to draw content.
- * @param options - The options for content.
+ * Options for opening an overlay.
  */
-export function createOverlayComponentInjector<T, D>(
-  viewContainerRef: ViewContainerRef,
-  options: DrawingOptions<T, D>,
-) {
-  return Injector.create({
-    providers: [
-      {
-        provide: OverlayProviders.id,
-        useValue: options.id,
-      },
-      {
-        provide: OverlayProviders.data,
-        useValue: options.data,
-      },
-    ],
-    parent: viewContainerRef.injector,
-  });
-}
-
-/**
- * The `OverlayService` should be provided in to a Component instead of NgModule.
- * The Component which is providing `OverlayService` should contain `<overlay-outlet>` in its contents.
- */
-@Injectable()
-export class OverlayService implements OnDestroy {
+export interface OverlayOpenOptions<D = undefined, R = undefined> {
   /**
-   * The map of `ViewContainerRef` for overlay outlets.
-   * The key of object is overlay id.
-   */
-  private _containerRefs: ObjectMap<ViewContainerRef> = {};
-
-  /**
-   * The map of overlay contents which are drawn in specific overlay.
-   * The key of object is overlay id.
-   */
-  private _contentsRefs: ObjectMap<OverlayContentsRef<any, any>> = {};
-
-  ngOnDestroy(): void {
-    this._removeOutletContainers();
-  }
-
-  /**
-   * Append overlay outlet to service.
-   * @param outlet - The OverlayOutlet.
-   */
-  appendOverlayOutlet(outlet: OverlayOutletComponent): void {
-    this._containerRefs[outlet.id] = outlet.viewContainerRef;
-  }
-
-  /**
-   * Remove overlay outlet from service.
-   * @param outlet - The OverlayOutlet.
-   */
-  removeOverlayOutlet(outlet: OverlayOutletComponent): void {
-    if (this._containerRefs[outlet.id]) {
-      this.clearOverlay(outlet.id);
-
-      delete this._containerRefs[outlet.id];
-    }
-  }
-
-  /**
-   * Draw component to an overlay.
-   * For generics, see `DrawingOptions` interface.
-   * Every overlay component is responsible for setting its position.
-   * A developer needs to implement positioning method in the overlay component.
-   * @param options - Options of overlay group.
-   */
-  drawComponent<C, D = undefined, R = any>(options: DrawingOptions<C, D, R>): OverlayContentsRef<C, R> | null {
-    const viewContainerRef = this._containerRefs[options.id];
-
-    if (viewContainerRef) {
-      // Clear previous overlay.
-      this.clearOverlay(options.id);
-
-      const injector = createOverlayComponentInjector(viewContainerRef, options);
-      const overlayCoverRef = viewContainerRef.createComponent(OverlayCoverComponent, {injector});
-      const componentRef = viewContainerRef.createComponent(options.component, {injector});
-
-      // Call detect changes to initialize the components.
-      overlayCoverRef.changeDetectorRef.detectChanges();
-      componentRef.changeDetectorRef.detectChanges();
-
-      this._contentsRefs[options.id] = new OverlayContentsRef<C, R>(componentRef, overlayCoverRef, options.onClose);
-
-      return this._contentsRefs[options.id];
-    }
-
-    return null;
-  }
-
-  /**
-   * Clear the overlay.
-   * @param id - The overlay id.
-   * @param response - The response.
-   */
-  clearOverlay(id: string, response?: any): void {
-    const contents = this._contentsRefs[id];
-
-    if (contents) {
-      contents.destroy(response);
-
-      delete this._contentsRefs[id];
-    }
-  }
-
-  /**
-   * Remove all outlet containers.
-   */
-  private _removeOutletContainers(): void {
-    for (let key in this._containerRefs) {
-      this.clearOverlay(key);
-
-      delete this._containerRefs[key];
-    }
-  }
-}
-
-/**
- * The options for `drawComponent()` method of `OverlayService`.
- * Generic `C` to be `component`, `D` to be `data`, `R` to be return value of `onClose()` callback function.
- */
-export interface DrawingOptions<C, D = undefined, R = any> {
-  /**
-   * The `id` of an overlay to draw the component.
-   */
-  id: string;
-
-  /**
-   * The component to draw in overlay.
-   */
-  component: Type<C>;
-
-  /**
-   * The data needs to be passed to a component.
+   * A data that pass to overlay component.
    */
   data?: D;
 
   /**
-   * Callback function to handle close event.
-   * @param res - The response.
+   * Close event handler.
+   * @param res - A response.
    */
-  onClose?: (res: R) => void;
+  onClose?: (res?: R) => void;
+
+  /**
+   * Injector to override default injector of overlay.
+   */
+  injector?: Injector;
 }
 
 /**
- * The enum for providers of drawing component.
+ * A service to manage overlay.
  */
-export enum OverlayProviders {
+@Injectable({
+  providedIn: 'root',
+})
+export class OverlayService implements OnDestroy {
   /**
-   * Refer to overlay id.
+   * The overlay outlet component.
    */
-  id = 'OverlayId',
+  private _overlayOutlet?: OverlayOutletComponent;
 
   /**
-   * Refer to passed data.
+   * Opened overlays.
    */
-  data = 'OverlayData',
-}
+  private _openedOverlays: OverlayRef<any>[] = [];
 
-/**
- * Data class for drawn component and its cover.
- * Generic `C` to be `component`, `R` to be return value of `onClose()` callback function.
- */
-export class OverlayContentsRef<C, R> {
-  /**
-   * Drawn component on overlay.
-   */
-  private readonly _component: ComponentRef<C>;
-
-  /**
-   * `OverlayCover` for drawn component.
-   */
-  private readonly _cover: ComponentRef<OverlayCoverComponent>;
-
-  /**
-   * Close callback function.
-   */
-  private readonly _onClose?: (res: R) => void;
-
-  constructor(component: ComponentRef<C>, cover: ComponentRef<OverlayCoverComponent>, onClose?: (res: R) => void) {
-    this._component = component;
-    this._cover = cover;
-    this._onClose = onClose;
+  constructor(
+    private _subscriptionService:  SubscriptionService,
+  ) {
   }
 
   /**
-   * Get contents component.
+   * Get the `ViewContainerRef` of `OverlayOutletComponent`.
    */
-  get component(): ComponentRef<C> {
-    return this._component;
+  get viewContainerRef(): ViewContainerRef | undefined {
+    return this._overlayOutlet?.viewContainerRef;
   }
 
   /**
-   * Get `OverlayCover`.
+   * Get state of having opened overlays.
    */
-  get cover(): ComponentRef<OverlayCoverComponent> {
-    return this._cover;
+  get hasOpenedOverlays(): boolean {
+    return Object.keys(this._openedOverlays).length > 0;
+  }
+
+  ngOnDestroy(): void {
+    this.unregisterOverlayOutlet();
   }
 
   /**
-   * Destroy the contents component and cover.
-   * @param response - The response.
+   * Register the overlay outlet.
+   * @param outlet - The outlet component.
    */
-  destroy(response?: R): void {
-    this._component.destroy();
-    this._cover.destroy();
-
-    if (this._onClose) {
-      this._onClose(response as any);
+  registerOverlayOutlet(outlet: OverlayOutletComponent): void {
+    // Only a single outlet can be registered.
+    // If trying to register outlet when there's already registered outlet,
+    // throw the error.
+    if (this._overlayOutlet) {
+      throw new Error('Only a single overlay outlet can be registered');
     }
+
+    this._overlayOutlet = outlet;
+  }
+
+  /**
+   * Unregister the overlay outlet.
+   */
+  unregisterOverlayOutlet(): void {
+    this.closeAll();
+    this._overlayOutlet = undefined;
+  }
+
+  /**
+   * Open overlay.
+   * @param component - A component to open as an overlay.
+   * @param options - Options for opening overlay.
+   */
+  open<C, D = undefined, R = undefined>(component: Type<C>, options: OverlayOpenOptions<D, R>): OverlayRef<C, D, R> {
+    if (!this.viewContainerRef) {
+      throw new Error('No `ViewContainerRef` to open overlay. Maybe overlay outlet is not registered.');
+    }
+
+    const overlayRef = new OverlayRef(
+      this.viewContainerRef,
+      component,
+      options,
+    );
+
+    this._openedOverlays.push(overlayRef);
+    this._subscribeOverlayClosed(overlayRef);
+
+    return overlayRef;
+  }
+
+  /**
+   * Close latest overlay.
+   */
+  closeLatest(): void {
+    const overlayRef = this._openedOverlays.pop();
+
+    if (overlayRef) {
+      overlayRef.close();
+    }
+  }
+
+  /**
+   * Close all overlays.
+   */
+  closeAll(): void {
+    this._openedOverlays.forEach(overlayRef => overlayRef.close());
+  }
+
+  /**
+   * Subscribe closed emitter of an `OverlayRef`.
+   * @param overlayRef - An `OverlayRef` to subscribe.
+   */
+  private _subscribeOverlayClosed(overlayRef: OverlayRef<any>): void {
+    const sub = overlayRef.closed.subscribe(() => {
+      this._destroyOverlayRef(overlayRef);
+    });
+
+    this._subscriptionService.store(`_subscribeOverlayClose${overlayRef.id}`, sub);
+  }
+
+  /**
+   * Destroy `OverlayRef`.
+   * @param overlayRef - An `OverlayRef` to destroy.
+   */
+  private _destroyOverlayRef<R = undefined>(overlayRef: OverlayRef<any>): void {
+    const index = this._openedOverlays.indexOf(overlayRef);
+
+    if (index !== -1) {
+      this._openedOverlays.splice(index, 1);
+    }
+
+    overlayRef.backdropRef.destroy();
+    overlayRef.componentRef.destroy();
+
+    this._subscriptionService.unSubscribe(`_subscribeOverlayClosed${overlayRef.id}`);
+  }
+}
+
+/**
+ * An injection token for overlay data.
+ */
+export const OVERLAY_DATA = new InjectionToken<any>('OverlayData');
+
+/**
+ * An injection token for `OverlayRef`.
+ */
+export const OVERLAY_REF = new InjectionToken<OverlayRef<any>>('OverlayRef');
+
+/**
+ * Reference to an overlay component.
+ */
+export class OverlayRef<C, D = any, R = any> {
+  /**
+   * Closed emitter.
+   */
+  closed = new EventEmitter<void>();
+
+  /**
+   * An overlay id.
+   */
+  readonly id = RandomUtil.key();
+
+  /**
+   * Reference to an overlay component.
+   */
+  private readonly _componentRef: ComponentRef<C>;
+
+  /**
+   * Reference to an overlay backdrop.
+   */
+  private readonly _backdropRef: ComponentRef<OverlayBackdropComponent>;
+
+  constructor(
+    private _viewContainerRef: ViewContainerRef,
+    private _component: Type<C>,
+    private _options: OverlayOpenOptions<D, R>,
+  ) {
+    const injector = this._createInjector();
+
+    // Create backdrop.
+    this._backdropRef = this._viewContainerRef.createComponent(OverlayBackdropComponent, {
+      injector,
+    });
+
+    this._backdropRef.changeDetectorRef.detectChanges();
+
+    // Create component.
+    this._componentRef = this._viewContainerRef.createComponent(this._component, {
+      injector,
+    });
+
+    this._componentRef.changeDetectorRef.detectChanges();
+  }
+
+  /**
+   * Getter for `_componentRef`.
+   */
+  get componentRef(): ComponentRef<C> {
+    return this._componentRef;
+  }
+
+  /**
+   * Getter for `_backdropRef`.
+   */
+  get backdropRef(): ComponentRef<OverlayBackdropComponent> {
+    return this._backdropRef;
+  }
+
+  /**
+   * Emit closed emitter of this overlay.
+   * @param result - The result data.
+   */
+  close(result?: R): void {
+    if (this._options.onClose) {
+      this._options.onClose(result);
+    }
+
+    this.closed.emit();
+  }
+
+  /**
+   * Create an injector.
+   */
+  private _createInjector(): Injector {
+    return this._options.injector || Injector.create({
+      providers: [
+        {
+          provide: OVERLAY_DATA,
+          useValue: this._options.data,
+        },
+        {
+          provide: OVERLAY_REF,
+          useValue: this,
+        },
+      ],
+      parent: this._viewContainerRef.injector,
+    });
   }
 }

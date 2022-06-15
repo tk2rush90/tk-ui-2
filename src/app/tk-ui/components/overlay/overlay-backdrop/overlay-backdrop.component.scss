@@ -1,11 +1,10 @@
 @import "mixins";
 @import "props";
 
-// OverlayCover.
+// OverlayBackdrop.
 :host {
   @include box(100%);
   @include top-left;
-  position: absolute;
+  position: relative;
   display: block;
-  pointer-events: all;
 }

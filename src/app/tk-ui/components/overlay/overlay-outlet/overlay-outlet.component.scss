@@ -11,5 +11,9 @@
   position: fixed;
   display: block;
   pointer-events: none;
-  z-index: 1000;
+  z-index: 1001;
+
+  &.tk-has-opened {
+    pointer-events: auto;
+  }
 }

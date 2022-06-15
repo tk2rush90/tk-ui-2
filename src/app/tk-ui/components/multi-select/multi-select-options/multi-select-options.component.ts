@@ -1,6 +1,6 @@
 import {Component, ElementRef, HostListener, Inject, OnInit} from '@angular/core';
 import {OptionItem} from '@tk-ui/models/option-item';
-import {OverlayProviders, OverlayService} from '@tk-ui/components/overlay/overlay.service';
+import {OVERLAY_DATA, OVERLAY_REF, OverlayRef} from '@tk-ui/components/overlay/overlay.service';
 import {EventListenerService} from '@tk-ui/services/common/event-listener.service';
 import {ObjectMap} from '@tk-ui/others/types';
 import {AvailableKey, EventUtil} from '@tk-ui/utils/event.util';
@@ -64,13 +64,12 @@ export class MultiSelectOptionsComponent extends SelectOverlay<MultiSelectOption
   private _selectedOptions: OptionItem<string>[] = [];
 
   constructor(
-    @Inject(OverlayProviders.id) protected override id: string,
-    @Inject(OverlayProviders.data) protected override data: MultiSelectOptionsData,
-    protected override elementRef: ElementRef<HTMLElement>,
-    protected override overlayService: OverlayService,
-    protected override eventListenerService: EventListenerService,
+    @Inject(OVERLAY_REF) protected override _overlayRef: OverlayRef<MultiSelectOptionsComponent, MultiSelectOptionsData, void>,
+    @Inject(OVERLAY_DATA) protected override _data: MultiSelectOptionsData,
+    protected override _elementRef: ElementRef<HTMLElement>,
+    protected override _eventListenerService: EventListenerService,
   ) {
-    super(id, data, elementRef, overlayService, eventListenerService);
+    super(_overlayRef, _data, _elementRef, _eventListenerService);
   }
 
   ngOnInit(): void {
@@ -81,14 +80,14 @@ export class MultiSelectOptionsComponent extends SelectOverlay<MultiSelectOption
    * Get select value.
    */
   get value(): string[] {
-    return this.data.value;
+    return this._data.value;
   }
 
   /**
    * Get all options.
    */
   get options(): OptionItem<string>[] {
-    return this.data.options;
+    return this._data.options;
   }
 
   /**
@@ -133,7 +132,7 @@ export class MultiSelectOptionsComponent extends SelectOverlay<MultiSelectOption
    * @param option - The selected option.
    */
   closeOptions(option?: OptionItem<string>): void {
-    this.overlayService.clearOverlay(this.id, option?.value);
+    this._overlayRef.close();
   }
 
   /**
@@ -149,7 +148,7 @@ export class MultiSelectOptionsComponent extends SelectOverlay<MultiSelectOption
       this._selectedOptions.push(option);
     }
 
-    this.data.onChange(this._selectedOptions.map(_option => _option.value));
+    this._data.onChange(this._selectedOptions.map(_option => _option.value));
     this._updateValuesMap();
   }
 

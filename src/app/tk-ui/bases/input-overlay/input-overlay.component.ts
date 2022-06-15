@@ -1,6 +1,6 @@
 import {Component, ElementRef, HostBinding, HostListener, Inject} from '@angular/core';
 import {OverlayContent} from '@tk-ui/components/overlay/overlay-content/overlay-content.directive';
-import {OverlayProviders, OverlayService} from '@tk-ui/components/overlay/overlay.service';
+import {OVERLAY_DATA, OVERLAY_REF, OverlayRef} from '@tk-ui/components/overlay/overlay.service';
 import {EventListenerService} from '@tk-ui/services/common/event-listener.service';
 import {SHOW_DOWN_ANIMATION_NAME, showDownAnimation, ShowDownState} from '@tk-ui/animations/show-down';
 import {SHOW_UP_ANIMATION_NAME, showUpAnimation, ShowUpState} from '@tk-ui/animations/show-up';
@@ -66,13 +66,12 @@ export class InputOverlay extends OverlayContent {
   protected _reversed = false;
 
   constructor(
-    @Inject(OverlayProviders.id) protected override id: string,
-    @Inject(OverlayProviders.data) protected data: InputOverlayData,
-    protected override elementRef: ElementRef<HTMLElement>,
-    protected override overlayService: OverlayService,
-    protected override eventListenerService: EventListenerService,
+    @Inject(OVERLAY_REF) protected override _overlayRef: OverlayRef<any>,
+    @Inject(OVERLAY_DATA) protected _data: InputOverlayData,
+    protected override _elementRef: ElementRef<HTMLElement>,
+    protected override _eventListenerService: EventListenerService,
   ) {
-    super(id, elementRef, overlayService, eventListenerService);
+    super(_overlayRef, _elementRef, _eventListenerService);
   }
 
   /**

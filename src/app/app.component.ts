@@ -6,6 +6,7 @@ import {ModalService} from '@tk-ui/components/modal/modal.service';
 import {TestModalComponent} from './components/test-modal/test-modal.component';
 import {LoggerUtil} from '@tk-ui/utils/logger.util';
 import {MessageService} from '@tk-ui/components/message/message.service';
+import {OverlayService} from '@tk-ui/components/overlay/overlay.service';
 
 @Component({
   selector: 'app-root',
@@ -32,6 +33,7 @@ export class AppComponent implements AfterViewInit {
   pending = false;
 
   constructor(
+    private overlayService: OverlayService,
     private modalService: ModalService,
     private messageService: MessageService,
   ) {
@@ -73,8 +75,7 @@ export class AppComponent implements AfterViewInit {
   openModal(): void {
     const logger = LoggerUtil.createLogger(this);
 
-    this.modalService.open({
-      component: TestModalComponent,
+    this.modalService.open(TestModalComponent, {
       onClose: () => {
         logger.warn('Modal closed');
       },

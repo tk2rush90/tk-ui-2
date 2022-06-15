@@ -1,7 +1,7 @@
 import {Component, ElementRef, HostBinding, HostListener, Input, Optional, Self, ViewChild} from '@angular/core';
 import {OverlayOutletComponent} from '@tk-ui/components/overlay/overlay-outlet/overlay-outlet.component';
 import {OptionItem} from '@tk-ui/models/option-item';
-import {OverlayContentsRef, OverlayService} from '@tk-ui/components/overlay/overlay.service';
+import {OverlayRef, OverlayService} from '@tk-ui/components/overlay/overlay.service';
 import {NgControl} from '@angular/forms';
 import {AvailableKey, EventUtil} from '@tk-ui/utils/event.util';
 import {CustomFormControl} from '@tk-ui/bases/custom-form-control/custom-form-control.directive';
@@ -19,9 +19,6 @@ import {ObjectUtil} from '@tk-ui/utils/object.util';
   selector: 'app-multi-select',
   templateUrl: './multi-select.component.html',
   styleUrls: ['./multi-select.component.scss'],
-  providers: [
-    OverlayService,
-  ],
 })
 export class MultiSelectComponent extends CustomFormControl<string[]> {
   /**
@@ -78,12 +75,12 @@ export class MultiSelectComponent extends CustomFormControl<string[]> {
   /**
    * The overlay contents for options.
    */
-  private _optionsOverlayContentsRef: OverlayContentsRef<MultiSelectOptionsComponent, void> | null = null;
+  private _optionsOverlayRef: OverlayRef<MultiSelectOptionsComponent, MultiSelectOptionsData, void> | null = null;
 
   constructor(
     @Self() @Optional() public override ngControl: NgControl,
-    private elementRef: ElementRef<HTMLElement>,
-    private overlayService: OverlayService,
+    private _elementRef: ElementRef<HTMLElement>,
+    private _overlayService: OverlayService,
   ) {
     super(ngControl);
   }
@@ -103,7 +100,7 @@ export class MultiSelectComponent extends CustomFormControl<string[]> {
    */
   @HostBinding('class.tk-opened')
   get opened(): boolean {
-    return !!this._optionsOverlayContentsRef;
+    return !!this._optionsOverlayRef;
   }
 
   /**
@@ -124,7 +121,7 @@ export class MultiSelectComponent extends CustomFormControl<string[]> {
    * Get host element.
    */
   get element(): HTMLElement {
-    return this.elementRef.nativeElement;
+    return this._elementRef.nativeElement;
   }
 
   /**
@@ -197,10 +194,8 @@ export class MultiSelectComponent extends CustomFormControl<string[]> {
    */
   openOptions(): void {
     if (!this.opened && !this.disabled) {
-      this._optionsOverlayContentsRef = this.overlayService
-        .drawComponent<MultiSelectOptionsComponent, MultiSelectOptionsData, void>({
-          id: this.overlayOutlet.id,
-          component: MultiSelectOptionsComponent,
+      this._optionsOverlayRef = this._overlayService
+        .open<MultiSelectOptionsComponent, MultiSelectOptionsData, void>(MultiSelectOptionsComponent, {
           data: {
             options: this._options,
             value: this._value,
@@ -210,7 +205,7 @@ export class MultiSelectComponent extends CustomFormControl<string[]> {
             },
           },
           onClose: () => {
-            this._optionsOverlayContentsRef = null;
+            this._optionsOverlayRef = null;
             this.markAsTouched();
           },
         });
@@ -222,7 +217,7 @@ export class MultiSelectComponent extends CustomFormControl<string[]> {
    */
   private _closeOptions(): void {
     if (this.opened) {
-      this.overlayService.clearOverlay(this.overlayOutlet.id);
+      this._optionsOverlayRef!.close();
     }
   }
 

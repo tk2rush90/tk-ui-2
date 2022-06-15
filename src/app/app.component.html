@@ -1,49 +1,55 @@
-<app-router-progress></app-router-progress>
+<div class="root">
+  <app-router-progress></app-router-progress>
 
-<app-select
-  [options]="options"></app-select>
+  <app-select
+    [options]="options"></app-select>
 
-<app-multi-select
-  [(ngModel)]="values"
-  [options]="options"
-  [disabled]="true"
-  placeholder="Placeholder"></app-multi-select>
+  <app-multi-select
+    [(ngModel)]="values"
+    [options]="options"
+    [disabled]="true"
+    placeholder="Placeholder"></app-multi-select>
 
-<app-search-select
-  [options]="options"
-  placeholder="Placeholder"></app-search-select>
+  <app-search-select
+    [options]="options"
+    placeholder="Placeholder"></app-search-select>
 
-<app-datepicker></app-datepicker>
+  <app-datepicker></app-datepicker>
 
-<!-- The modal outlet. -->
-<app-modal-outlet></app-modal-outlet>
+  <button
+    (click)="clickOpenModal()"
+    appFlatButton>
+    Open Modal
+  </button>
 
-<button
-  (click)="clickOpenModal()"
-  appFlatButton>
-  Open Modal
-</button>
+  <button
+    (click)="openInfo()"
+    appFlatButton>
+    Open Info
+  </button>
+  <button
+    (click)="openError()"
+    appFlatButton>
+    Open Error
+  </button>
+  <button
+    (click)="openSuccess()"
+    appFlatButton>
+    Open Success
+  </button>
 
-<app-test-module></app-test-module>
+  <router-outlet></router-outlet>
+
+  <app-spinner></app-spinner>
+  <div class="container"></div>
+  <div class="container"></div>
+  <div class="container"></div>
+  <div class="container"></div>
+  <div class="container"></div>
+</div>
 
 <app-message-outlet></app-message-outlet>
 
-<button
-  (click)="openInfo()"
-  appFlatButton>
-  Open Info
-</button>
-<button
-  (click)="openError()"
-  appFlatButton>
-  Open Error
-</button>
-<button
-  (click)="openSuccess()"
-  appFlatButton>
-  Open Success
-</button>
+<app-modal-outlet></app-modal-outlet>
 
-<router-outlet></router-outlet>
-
-<app-spinner></app-spinner>
+<app-overlay-outlet></app-overlay-outlet>

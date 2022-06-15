@@ -1,5 +1,5 @@
 import {Component, ElementRef, HostListener, Inject, OnInit} from '@angular/core';
-import {OverlayProviders, OverlayService} from '@tk-ui/components/overlay/overlay.service';
+import {OVERLAY_DATA, OVERLAY_REF, OverlayRef} from '@tk-ui/components/overlay/overlay.service';
 import {OptionItem} from '@tk-ui/models/option-item';
 import {EventListenerService} from '@tk-ui/services/common/event-listener.service';
 import {AvailableKey, EventUtil} from '@tk-ui/utils/event.util';
@@ -39,13 +39,12 @@ export class SelectOptionsComponent extends SelectOverlay<SelectOptionsData> imp
   cursorIndex = -1;
 
   constructor(
-    @Inject(OverlayProviders.id) protected override id: string,
-    @Inject(OverlayProviders.data) protected override data: SelectOptionsData,
-    protected override elementRef: ElementRef<HTMLElement>,
-    protected override overlayService: OverlayService,
-    protected override eventListenerService: EventListenerService,
+    @Inject(OVERLAY_REF) protected override _overlayRef: OverlayRef<SelectOptionsComponent, SelectOptionsData, string>,
+    @Inject(OVERLAY_DATA) protected override _data: SelectOptionsData,
+    protected override _elementRef: ElementRef<HTMLElement>,
+    protected override _eventListenerService: EventListenerService,
   ) {
-    super(id, data, elementRef, overlayService, eventListenerService);
+    super(_overlayRef, _data, _elementRef, _eventListenerService);
   }
 
   ngOnInit(): void {
@@ -62,14 +61,14 @@ export class SelectOptionsComponent extends SelectOverlay<SelectOptionsData> imp
    * Get select value.
    */
   get value(): string | undefined {
-    return this.data.value;
+    return this._data.value;
   }
 
   /**
    * Get all options.
    */
   get options(): OptionItem<string>[] {
-    return this.data.options;
+    return this._data.options;
   }
 
   /**
@@ -114,7 +113,7 @@ export class SelectOptionsComponent extends SelectOverlay<SelectOptionsData> imp
    * @param option - The selected option.
    */
   closeOptions(option?: OptionItem<string>): void {
-    this.overlayService.clearOverlay(this.id, option?.value);
+    this._overlayRef.close(option?.value);
   }
 
   /**

@@ -1,15 +1,23 @@
-import {AfterViewInit, Component, OnDestroy, ViewChild, ViewContainerRef} from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  HostBinding,
+  HostListener,
+  OnDestroy,
+  ViewChild,
+  ViewContainerRef
+} from '@angular/core';
 import {RandomUtil} from '@tk-ui/utils/random.util';
 import {OverlayService} from '@tk-ui/components/overlay/overlay.service';
+import {AvailableKey, EventUtil} from '@tk-ui/utils/event.util';
 
 /**
- * The outlet to draw overlay contents.
- * A single overlay outlet can draw a single component.
+ * An outlet to render overlay component.
  */
 @Component({
   selector: 'app-overlay-outlet',
   templateUrl: './overlay-outlet.component.html',
-  styleUrls: ['./overlay-outlet.component.scss']
+  styleUrls: ['./overlay-outlet.component.scss'],
 })
 export class OverlayOutletComponent implements AfterViewInit, OnDestroy {
   /**
@@ -23,14 +31,32 @@ export class OverlayOutletComponent implements AfterViewInit, OnDestroy {
   id = RandomUtil.key();
 
   constructor(
-    private overlayService: OverlayService,
+    private _overlayService: OverlayService,
   ) { }
 
+  /**
+   * Bind opened state to class.
+   */
+  @HostBinding('class.tk-has-opened') get hasOpened(): boolean {
+    return this._overlayService.hasOpenedOverlays;
+  }
+
   ngAfterViewInit(): void {
-    this.overlayService.appendOverlayOutlet(this);
+    this._overlayService.registerOverlayOutlet(this);
   }
 
   ngOnDestroy(): void {
-    this.overlayService.removeOverlayOutlet(this);
+    this._overlayService.unregisterOverlayOutlet();
+  }
+
+  /**
+   * Listen window keydown event to close the latest outlet.
+   * @param event - The `KeyboardEvent`.
+   */
+  @HostListener('window:keydown', ['$event'])
+  onWindowKeydown(event: KeyboardEvent): void {
+    if (EventUtil.isKey(event, AvailableKey.Escape)) {
+      this._overlayService.closeLatest();
+    }
   }
 }

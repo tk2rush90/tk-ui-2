@@ -1,7 +1,7 @@
 import {Component, ElementRef, HostListener, Input, Optional, Self, ViewChild} from '@angular/core';
 import {CustomFormControl} from '@tk-ui/bases/custom-form-control/custom-form-control.directive';
 import {NgControl} from '@angular/forms';
-import {OverlayContentsRef, OverlayService} from '@tk-ui/components/overlay/overlay.service';
+import {OverlayRef, OverlayService} from '@tk-ui/components/overlay/overlay.service';
 import {
   DatepickerCalendarComponent,
   DatepickerCalendarData
@@ -17,9 +17,6 @@ import {AvailableKey, EventUtil} from '@tk-ui/utils/event.util';
   selector: 'app-datepicker',
   templateUrl: './datepicker.component.html',
   styleUrls: ['./datepicker.component.scss'],
-  providers: [
-    OverlayService,
-  ],
 })
 export class DatepickerComponent extends CustomFormControl<Date | undefined> {
   /**
@@ -66,12 +63,12 @@ export class DatepickerComponent extends CustomFormControl<Date | undefined> {
   /**
    * The `OverlayContentsRef` for calendar.
    */
-  private _calendarOverlayContentsRef?: OverlayContentsRef<DatepickerCalendarComponent, Date | undefined> | null = null;
+  private _calendarOverlayRef?: OverlayRef<DatepickerCalendarComponent, DatepickerCalendarData, Date | undefined> | null = null;
 
   constructor(
     @Self() @Optional() public override ngControl: NgControl,
-    private elementRef: ElementRef<HTMLElement>,
-    private overlayService: OverlayService,
+    private _elementRef: ElementRef<HTMLElement>,
+    private _overlayService: OverlayService,
   ) {
     super(ngControl);
   }
@@ -87,14 +84,14 @@ export class DatepickerComponent extends CustomFormControl<Date | undefined> {
    * Get host element.
    */
   get element(): HTMLElement {
-    return this.elementRef.nativeElement;
+    return this._elementRef.nativeElement;
   }
 
   /**
    * Get opened state.
    */
   get opened(): boolean {
-    return !!this._calendarOverlayContentsRef;
+    return !!this._calendarOverlayRef;
   }
 
   /**
@@ -160,10 +157,8 @@ export class DatepickerComponent extends CustomFormControl<Date | undefined> {
    */
   openCalendar(): void {
     if (!this.opened) {
-      this._calendarOverlayContentsRef = this.overlayService
-        .drawComponent<DatepickerCalendarComponent, DatepickerCalendarData, Date | undefined>({
-          id: this.overlayOutlet.id,
-          component: DatepickerCalendarComponent,
+      this._calendarOverlayRef = this._overlayService
+        .open<DatepickerCalendarComponent, DatepickerCalendarData, Date | undefined>(DatepickerCalendarComponent, {
           data: {
             value: this._date,
             button: this.buttonRef.nativeElement,
@@ -173,7 +168,7 @@ export class DatepickerComponent extends CustomFormControl<Date | undefined> {
               this.setValue(res);
             }
 
-            this._calendarOverlayContentsRef = null;
+            this._calendarOverlayRef = null;
           },
         });
     }

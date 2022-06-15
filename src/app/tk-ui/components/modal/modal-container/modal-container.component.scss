@@ -4,10 +4,9 @@
 // ModalContainer.
 :host {
   @include top-left;
-  @include box(100%);
   @include flex(center);
   @include padding(20px);
-  position: fixed;
-  overflow: auto;
-  z-index: 1;
+  width: 100%;
+  min-height: 100%;
+  position: absolute;
 }

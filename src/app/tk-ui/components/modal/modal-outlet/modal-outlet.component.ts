@@ -1,6 +1,15 @@
-import {AfterViewInit, Component, OnDestroy, ViewChild, ViewContainerRef} from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  HostBinding,
+  HostListener,
+  OnDestroy,
+  ViewChild,
+  ViewContainerRef
+} from '@angular/core';
 import {RandomUtil} from '@tk-ui/utils/random.util';
 import {ModalService} from '@tk-ui/components/modal/modal.service';
+import {AvailableKey, EventUtil} from '@tk-ui/utils/event.util';
 
 /**
  * The `ModalOutlet` should be placed in the root component
@@ -23,15 +32,33 @@ export class ModalOutletComponent implements AfterViewInit, OnDestroy {
   id = RandomUtil.key();
 
   constructor(
-    private modalService: ModalService,
+    private _modalService: ModalService,
   ) {
   }
 
+  /**
+   * Bind opened state to class.
+   */
+  @HostBinding('class.tk-has-opened') get hasOpened(): boolean {
+    return this._modalService.hasOpenedModals;
+  }
+
   ngAfterViewInit(): void {
-    this.modalService.registerOutlet(this);
+    this._modalService.registerModalOutlet(this);
   }
 
   ngOnDestroy(): void {
-    this.modalService.unregisterOutlet(this);
+    this._modalService.unregisterModalOutlet();
+  }
+
+  /**
+   * Listen window keydown event to close the latest outlet.
+   * @param event - The `KeyboardEvent`.
+   */
+  @HostListener('window:keydown', ['$event'])
+  onWindowKeydown(event: KeyboardEvent): void {
+    if (EventUtil.isKey(event, AvailableKey.Escape)) {
+      this._modalService.closeLatest();
+    }
   }
 }

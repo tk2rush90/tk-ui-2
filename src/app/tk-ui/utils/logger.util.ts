@@ -24,7 +24,7 @@ export class LoggerUtil {
    * @param data - The log data.
    */
   static info(...data: any[]): void {
-    console.info('%c[INFO]', createStyles({color: 'lightgreen'}), ...data);
+    console.info('%c[INFO]', createStyles({color: 'lightgreen', 'background-color': 'black'}), ...data);
   }
 
   /**
@@ -33,7 +33,7 @@ export class LoggerUtil {
    */
   static debug(...data: any[]): void {
     if (!this.production) {
-      console.debug('%c[DEBUG]', createStyles({color: 'lightblue'}), ...data);
+      console.debug('%c[DEBUG]', createStyles({color: 'lightblue', 'background-color': 'black'}), ...data);
     }
   }
 
@@ -43,7 +43,7 @@ export class LoggerUtil {
    */
   static warn(...data: any[]): void {
     if (!this.production) {
-      console.warn('%c[WARNING]', createStyles({color: 'yellow'}), ...data);
+      console.warn('%c[WARNING]', createStyles({color: 'yellow', 'background-color': 'black'}), ...data);
     }
   }
 
@@ -52,7 +52,7 @@ export class LoggerUtil {
    * @param data - The log data.
    */
   static error(...data: any[]): void {
-    console.error('%c[ERROR]', createStyles({color: 'red'}), ...data);
+    console.error('%c[ERROR]', createStyles({color: 'red', 'background-color': 'black'}), ...data);
   }
 
   /**

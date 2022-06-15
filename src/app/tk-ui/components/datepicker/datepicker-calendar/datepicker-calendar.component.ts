@@ -1,6 +1,6 @@
 import {Component, ElementRef, HostListener, Inject, OnDestroy, OnInit} from '@angular/core';
 import {EventListenerService} from '@tk-ui/services/common/event-listener.service';
-import {OverlayProviders, OverlayService} from '@tk-ui/components/overlay/overlay.service';
+import {OVERLAY_DATA, OVERLAY_REF, OverlayRef} from '@tk-ui/components/overlay/overlay.service';
 import {CalendarDate, DateUtil} from '@tk-ui/utils/date.util';
 import {InputOverlay, InputOverlayData} from '@tk-ui/bases/input-overlay/input-overlay.component';
 import {AvailableKey, CommandKey, EventUtil} from '@tk-ui/utils/event.util';
@@ -71,24 +71,21 @@ export class DatepickerCalendarComponent extends InputOverlay implements OnInit,
   private _positioningTimer: any;
 
   constructor(
-    @Inject(OverlayProviders.id) protected override id: string,
-    @Inject(OverlayProviders.data) protected override data: DatepickerCalendarData,
-    protected override elementRef: ElementRef<HTMLElement>,
-    protected override overlayService: OverlayService,
-    protected override eventListenerService: EventListenerService,
+    @Inject(OVERLAY_REF) protected override _overlayRef: OverlayRef<DatepickerCalendarComponent, DatepickerCalendarData, Date>,
+    @Inject(OVERLAY_DATA) protected override _data: DatepickerCalendarData,
+    protected override _elementRef: ElementRef<HTMLElement>,
+    protected override _eventListenerService: EventListenerService,
   ) {
-    super(id, data, elementRef, overlayService, eventListenerService);
+    super(_overlayRef, _data, _elementRef, _eventListenerService);
   }
 
   ngOnInit(): void {
-    this.selectedDate = this.data.value;
+    this.selectedDate = this._data.value;
     this._onSelectedDateChange();
     this._setInitialCursorPosition();
   }
 
-  override ngAfterViewInit() {
-    super.ngAfterViewInit();
-
+  ngAfterViewInit() {
     this._positioningTimer = setTimeout(() => {
       this._setPositioningStyles();
       this._startAnimation();
@@ -257,7 +254,7 @@ export class DatepickerCalendarComponent extends InputOverlay implements OnInit,
    * @param result - The result to pass.
    */
   closeOverlay(result?: Date): void {
-    this.overlayService.clearOverlay(this.id, result);
+    this._overlayRef.close(result);
   }
 
   /**
@@ -332,7 +329,7 @@ export class DatepickerCalendarComponent extends InputOverlay implements OnInit,
    * Set positioning styles of calendar.
    */
   private _setPositioningStyles(): void {
-    const buttonRect = this.data.button.getBoundingClientRect();
+    const buttonRect = this._data.button.getBoundingClientRect();
     const elementRect = this.element.getBoundingClientRect();
 
     // Put calendar to the right end of the button.

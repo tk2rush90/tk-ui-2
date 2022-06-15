@@ -1,12 +1,10 @@
-import {ComponentRef, EventEmitter, Injectable, Injector, Type, ViewContainerRef} from '@angular/core';
-import {ObjectMap} from '@tk-ui/others/types';
-import {ModalOutletComponent} from '@tk-ui/components/modal/modal-outlet/modal-outlet.component';
-import {ModalGroupComponent} from '@tk-ui/components/modal/modal-group/modal-group.component';
+import {ComponentRef, EventEmitter, Injectable, InjectionToken, Injector, Type, ViewContainerRef} from '@angular/core';
 import {ModalBackdropComponent} from '@tk-ui/components/modal/modal-backdrop/modal-backdrop.component';
-import {combineLatest} from 'rxjs';
 import {Modal} from '@tk-ui/components/modal/modal/modal.component';
 import {SubscriptionService} from '@tk-ui/services/common/subscription.service';
+import {RandomUtil} from '@tk-ui/utils/random.util';
 import {ModalContainerComponent} from '@tk-ui/components/modal/modal-container/modal-container.component';
+import {ModalOutletComponent} from '@tk-ui/components/modal/modal-outlet/modal-outlet.component';
 
 /**
  * Modal creation options.
@@ -14,12 +12,7 @@ import {ModalContainerComponent} from '@tk-ui/components/modal/modal-container/m
  * Generic `D` is data to pass to modal component.
  * Generic `R` is returning data type of modal.
  */
-export interface ModalOptions<C extends Modal, D = undefined, R = any> {
-  /**
-   * The component to create as a modal.
-   */
-  component: Type<C>;
-
+export interface ModalOpenOptions<D = any, R = any> {
   /**
    * The data to pass to modal.
    */
@@ -35,6 +28,11 @@ export interface ModalOptions<C extends Modal, D = undefined, R = any> {
    * @param res - The response data.
    */
   onClose?: (res?: R) => void;
+
+  /**
+   * Injector to override default injector of modal.
+   */
+  injector?: Injector;
 }
 
 /**
@@ -47,260 +45,256 @@ export interface ModalOptions<C extends Modal, D = undefined, R = any> {
 })
 export class ModalService {
   /**
-   * The map of registered `ViewContainerRef`.
-   * The key is `id` of each `ModalOutletComponent`.
+   * A modal outlet.
    */
-  private _containerRefs: ObjectMap<ViewContainerRef> = {};
+  private _modalOutlet?: ModalOutletComponent;
 
   /**
-   * The map of created modals.
-   * Modals are grouped by `id` of `ModalOutletComponent`.
+   * A list of opened `ModalRef`.
    */
-  private _modalRefs: ObjectMap<ModalRef<any, any>[]> = {};
+  private _openedModals: ModalRef<any>[] = [];
 
   constructor(
-    private subscriptionService: SubscriptionService,
+    private _subscriptionService: SubscriptionService,
   ) { }
+
+  /**
+   * Get the `ViewContainerRef` of `ModalOutletComponent`.
+   */
+  get viewContainerRef(): ViewContainerRef | undefined {
+    return this._modalOutlet?.viewContainerRef;
+  }
 
   /**
    * Get state of having opened modals.
    */
-  get hasOpenedModal(): boolean {
-    return Object.keys(this._modalRefs).some(id => this._modalRefs[id].length > 0);
+  get hasOpenedModals(): boolean {
+    return this._openedModals.length > 0;
   }
 
   /**
-   * Register the `ViewContainerRef` of modal outlet.
-   * @param outlet - The modal outlet component.
+   * Register the modal outlet.
+   * @param outlet - The outlet component.
    */
-  registerOutlet(outlet: ModalOutletComponent): void {
-    this._containerRefs[outlet.id] = outlet.viewContainerRef;
-    this._modalRefs[outlet.id] = [];
+  registerModalOutlet(outlet: ModalOutletComponent): void {
+    // Only a single outlet can be registered.
+    // If trying to register outlet when there's already registered outlet,
+    // throw the error.
+    if (this._modalOutlet) {
+      throw new Error('Only a single modal outlet can be registered');
+    }
+
+    this._modalOutlet = outlet;
   }
 
   /**
-   * Unregister the `ModalOutlet` from service.
-   * @param outlet - The modal outlet component.
+   * Unregister the modal outlet.
    */
-  unregisterOutlet(outlet: ModalOutletComponent): void {
-    Object.keys(this._modalRefs).forEach(id => {
-      this._modalRefs[id].forEach(modalRef => {
-        // Remove subscriptions for `ModalRef`.
-        this._removeModalRefSubscriptions(modalRef);
-      });
-    });
-
-    // After all modals destroyed, delete the key from the map.
-    delete this._modalRefs[outlet.id];
-    delete this._containerRefs[outlet.id];
+  unregisterModalOutlet(): void {
+    this.closeAll();
+    this._modalOutlet = undefined;
   }
 
   /**
-   * Different to the overlay, modal will be rendered to all registered outlets.
-   * @param options - The options to create modal.
+   * Open a modal component.
+   * @param component
+   * @param options
    */
-  open<C extends Modal, D = undefined, R = any>(options: ModalOptions<C, D, R>): void {
-    Object.keys(this._containerRefs).forEach(id => {
-      const viewContainerRef = this._containerRefs[id];
+  open<C extends Modal, D = any, R = any>(component: Type<C>, options: ModalOpenOptions<D, R>): ModalRef<C, D, R> {
+    if (!this.viewContainerRef) {
+      throw new Error('No `ViewContainerRef` to open modal. Maybe modal outlet is not registered.');
+    }
 
-      // Create `ModalRef`.
-      const modalRef = new ModalRef<C, D, R>(id, viewContainerRef, options);
+    const modalRef = new ModalRef(
+      this.viewContainerRef,
+      component,
+      options,
+    );
 
-      this._subscribeModalRefClose(modalRef);
-      this._modalRefs[id].push(modalRef);
-    });
+    this._openedModals.push(modalRef);
+    this._subscribeModalClosed(modalRef);
+
+
+    return modalRef;
   }
 
   /**
-   * Close latest modal from all outlets.
+   * Close latest modal.
+   * @param force - Force to close the latest modal. It will ignore `preventClosing` option.
    */
-  closeLatest(): void {
-    // Remove the latest modal from all outlets.
-    Object.keys(this._modalRefs).forEach(id => this._modalRefs[id].pop()?.close());
+  closeLatest(force = false): void {
+    const modalRef = this._openedModals.pop();
+
+    if (modalRef) {
+      // When modal has `preventClosing` to `true`, only can be closed with `force` option.
+      if (modalRef.preventClosing) {
+        if (force) {
+          modalRef.close();
+        }
+      } else {
+        modalRef.close();
+      }
+    }
   }
 
   /**
-   * Close all modals from all outlets.
+   * Close all modals.
    */
   closeAll(): void {
-    Object.keys(this._modalRefs).forEach(id => {
-      this._modalRefs[id].forEach(modalRef => modalRef.close());
-    });
+    this._openedModals.forEach(modalRef => modalRef.close());
   }
 
   /**
-   * Subscribe for `ModalRef` close emitter.
-   * @param modalRef - The `ModalRef`.
+   * Subscribe `closed` emitter of modal.
+   * @param modalRef - A modal to subscribe.
    */
-  private _subscribeModalRefClose<C extends Modal, D = undefined, R = any>(modalRef: ModalRef<C, D, R>): void {
-    const sub = modalRef
-      .destroy
-      .subscribe(() => {
-        this._destroyModalContents(modalRef);
-      });
+  private _subscribeModalClosed(modalRef: ModalRef<any>): void {
+    const sub = modalRef.closed.subscribe(() => {
+      this._destroyModalRef(modalRef);
+    });
 
-    this.subscriptionService.store(`_subscribeModalRefClose${modalRef.groupId}`, sub);
+    this._subscriptionService.store(`_subscribeModalClosed${modalRef.id}`, sub);
   }
 
   /**
-   * Subscribe for removed emitter of backdrop and component in `ModalRef`.
-   * @param modalRef - The `ModalRef`.
+   * Destroy `ModalRef`.
+   * @param modalRef - An `ModalRef` to destroy.
    */
-  private _destroyModalContents<C extends Modal, D = undefined, R = any>(modalRef: ModalRef<C, D, R>): void {
-    const sub = combineLatest([
-      modalRef.backdropRef.instance.removed,
-      modalRef.componentRef.instance.removed,
-    ]).subscribe(() => {
-      // Destroy `ModalGroup` and `ModalContainer` after all contents destroyed.
-      modalRef.groupRef.destroy();
-      modalRef.containerRef.destroy();
+  private _destroyModalRef<R = undefined>(modalRef: ModalRef<any>): void {
+    const index = this._openedModals.indexOf(modalRef);
 
-      this._removeClosedModalRef(modalRef);
-      this._removeModalRefSubscriptions(modalRef);
-      this._focusToLatestModal(modalRef.outletId);
-    });
+    if (index !== -1) {
+      this._openedModals.splice(index, 1);
+    }
 
     modalRef.backdropRef.destroy();
-    modalRef.componentRef.destroy();
+    modalRef.containerRef.destroy();
 
-    this.subscriptionService.store(`_destroyModalGroup${modalRef.groupId}`, sub);
-  }
-
-  private _removeModalRefSubscriptions<C extends Modal, D = undefined, R = any>(modalRef: ModalRef<C, D, R>): void {
-    this.subscriptionService.unSubscribe(`_subscribeModalRefClose${modalRef.groupId}`);
-    this.subscriptionService.unSubscribe(`_destroyModalGroup${modalRef.groupId}`);
-  }
-
-  /**
-   * Remove closed modal from `_modalRef` map.
-   * @param modalRef - Closed `ModalRef`.
-   */
-  private _removeClosedModalRef<C extends Modal, D = undefined, R = any>(modalRef: ModalRef<C, D, R>): void {
-    this._modalRefs[modalRef.outletId] = this._modalRefs[modalRef.outletId].filter(_modalRef => _modalRef !== modalRef);
-  }
-
-  /**
-   * Focus to the latest modal.
-   * @param id - The outlet id to get the latest modal.
-   */
-  private _focusToLatestModal(id: string): void {
-    const modalRefs = this._modalRefs[id];
-    const latestModalRef = modalRefs[modalRefs.length - 1];
-
-    if (latestModalRef) {
-      latestModalRef.groupRef.instance.element.focus();
-    }
+    this._subscriptionService.unSubscribe(`_subscribeModalClosed${modalRef.id}`);
   }
 }
 
 /**
- * Provider keys for modal.
+ * Injection token of `ModalRef`.
  */
-export enum ModalProviders {
-  /**
-   * Refer to `ModalRef`.
-   */
-  ref = 'ModalRef',
+export const MODAL_REF = new InjectionToken<ModalRef<any>>('ModalRef');
 
-  /**
-   * Refer to passed modal data.
-   */
-  data = 'ModalData',
-}
+/**
+ * Injection token of data for a modal.
+ */
+export const MODAL_DATA = new InjectionToken<any>('ModalData');
 
 /**
  * The `ModalRef` refers to created modal.
  */
-export class ModalRef<C extends Modal, D = undefined, R = any> {
+export class ModalRef<C extends Modal, D = any, R = any> {
   /**
-   * Emitter that will be emitted when modal starts destroying.
+   * Closed emitter.
    */
-  destroy = new EventEmitter<void>();
-
-  /**
-   * The `ComponentRef` of `ModalGroupComponent`.
-   */
-  groupRef: ComponentRef<ModalGroupComponent>;
+  closed = new EventEmitter<void>();
 
   /**
-   * The `ComponentRef` of `ModalBackdropComponent`.
+   * A modal id.
    */
-  backdropRef: ComponentRef<ModalBackdropComponent>;
+  readonly id = RandomUtil.key();
 
   /**
-   * The `ComponentRef` of `ModalContainerComponent`.
+   * Reference to a modal component.
    */
-  containerRef: ComponentRef<ModalContainerComponent>;
+  private readonly _componentRef: ComponentRef<C>;
 
   /**
-   * The `ComponentRef` of created component.
+   * Reference to a modal container.
    */
-  componentRef: ComponentRef<C>;
+  private readonly _containerRef: ComponentRef<ModalContainerComponent>;
 
   /**
-   * The outlet id.
+   * Reference to a modal backdrop.
    */
-  outletId: string;
+  private readonly _backdropRef: ComponentRef<ModalBackdropComponent>;
 
-  /**
-   * The callback function which will be called after modal closed.
-   * @param res - The response data.
-   */
-  private readonly _onClose?: (res?: R) => void;
+  constructor(
+    private _viewContainerRef: ViewContainerRef,
+    private _component: Type<C>,
+    private _options: ModalOpenOptions<D, R>,
+  ) {
+    const injector = this._createInjector();
 
-  constructor(id: string, viewContainerRef: ViewContainerRef, options: ModalOptions<C, D, R>) {
-    this.outletId = id;
-    this._onClose = options.onClose;
+    // Create backdrop.
+    this._backdropRef = this._viewContainerRef.createComponent(ModalBackdropComponent);
+    this._backdropRef.changeDetectorRef.detectChanges();
 
-    // Create injector.
-    const injector = Injector.create({
-      providers: [
-        {
-          provide: ModalProviders.ref,
-          useValue: this,
-        },
-        {
-          provide: ModalProviders.data,
-          useValue: options.data,
-        },
-      ],
-      parent: viewContainerRef.injector,
+    // Create container.
+    this._containerRef = this._viewContainerRef.createComponent(ModalContainerComponent, {
+      injector,
     });
 
-    // Create group.
-    this.groupRef = viewContainerRef.createComponent(ModalGroupComponent);
-    this.groupRef.instance.preventClosing = options.preventClosing || false;
-    this.groupRef.changeDetectorRef.detectChanges();
+    this._containerRef.changeDetectorRef.detectChanges();
 
-    // Create Backdrop and Container.
-    // Backdrop and will get injector.
-    this.backdropRef = this.groupRef.instance.viewContainerRef.createComponent(ModalBackdropComponent, {injector});
-    this.containerRef = this.groupRef.instance.viewContainerRef.createComponent(ModalContainerComponent);
-    this.backdropRef.changeDetectorRef.detectChanges();
-    this.containerRef.changeDetectorRef.detectChanges();
+    // Create component. A component will be wrapped in the container.
+    this._componentRef = this._containerRef.instance.viewContainerRef.createComponent(this._component, {
+      injector,
+    });
 
-    // Create Component.
-    // Component will get injector.
-    this.componentRef = this.containerRef.instance.viewContainerRef.createComponent(options.component, {injector});
-    this.componentRef.changeDetectorRef.detectChanges();
+    this._componentRef.changeDetectorRef.detectChanges();
   }
 
   /**
-   * Get modal group id.
+   * Get state of preventing closing.
    */
-  get groupId(): string {
-    return this.groupRef.instance.id;
+  get preventClosing(): boolean {
+    return this._options.preventClosing || false;
   }
 
   /**
-   * Close the modal.
-   * @param res - The response data of modal.
+   * Getter for `_componentRef`.
    */
-  close(res?: R): void {
-    if (this._onClose) {
-      this._onClose(res);
+  get componentRef(): ComponentRef<C> {
+    return this._componentRef;
+  }
+
+  /**
+   * Getter for `_containerRef`.
+   */
+  get containerRef(): ComponentRef<ModalContainerComponent> {
+    return this._containerRef;
+  }
+
+  /**
+   * Getter for `_backdropRef`.
+   */
+  get backdropRef(): ComponentRef<any> {
+    return this._backdropRef;
+  }
+
+  /**
+   * Emit closed emitter of this modal.
+   * @param result - The result data.
+   */
+  close(result?: R): void {
+    if (this._options.onClose) {
+      this._options.onClose(result);
     }
 
-    this.destroy.emit();
+    this.closed.emit();
+  }
+
+  /**
+   * Create an injector.
+   */
+  private _createInjector(): Injector {
+    return this._options.injector || Injector.create({
+      providers: [
+        {
+          provide: MODAL_DATA,
+          useValue: this._options.data,
+        },
+        {
+          provide: MODAL_REF,
+          useValue: this,
+        },
+      ],
+      parent: this._viewContainerRef.injector,
+    });
   }
 }

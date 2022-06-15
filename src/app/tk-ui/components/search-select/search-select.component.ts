@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import {OverlayOutletComponent} from '@tk-ui/components/overlay/overlay-outlet/overlay-outlet.component';
 import {OptionItem} from '@tk-ui/models/option-item';
-import {OverlayContentsRef, OverlayService} from '@tk-ui/components/overlay/overlay.service';
+import {OverlayRef, OverlayService} from '@tk-ui/components/overlay/overlay.service';
 import {NgControl} from '@angular/forms';
 import {CustomFormControl} from '@tk-ui/bases/custom-form-control/custom-form-control.directive';
 import {
@@ -30,9 +30,6 @@ import {StringUtil} from '@tk-ui/utils/string.util';
   selector: 'app-search-select',
   templateUrl: './search-select.component.html',
   styleUrls: ['./search-select.component.scss'],
-  providers: [
-    OverlayService,
-  ],
 })
 export class SearchSelectComponent extends CustomFormControl<string> {
   /**
@@ -105,12 +102,12 @@ export class SearchSelectComponent extends CustomFormControl<string> {
   /**
    * The overlay contents for options.
    */
-  private _optionsOverlayContentsRef: OverlayContentsRef<SearchSelectOptionsComponent, string | undefined> | null = null;
+  private _optionsOverlayRef: OverlayRef<SearchSelectOptionsComponent, SearchSelectOptionsData, string | undefined> | null = null;
 
   constructor(
     @Self() @Optional() public override ngControl: NgControl,
-    private elementRef: ElementRef<HTMLElement>,
-    private overlayService: OverlayService,
+    private _elementRef: ElementRef<HTMLElement>,
+    private _overlayService: OverlayService,
   ) {
     super(ngControl);
   }
@@ -122,9 +119,9 @@ export class SearchSelectComponent extends CustomFormControl<string> {
   @Input()
   set pending(pending: boolean) {
     if (pending) {
-      this._optionsOverlayContentsRef?.component.instance.startPending();
+      this._optionsOverlayRef?.componentRef.instance.startPending();
     } else {
-      this._optionsOverlayContentsRef?.component.instance.endPending();
+      this._optionsOverlayRef?.componentRef.instance.endPending();
     }
   }
 
@@ -147,7 +144,7 @@ export class SearchSelectComponent extends CustomFormControl<string> {
    */
   @HostBinding('class.tk-opened')
   get opened(): boolean {
-    return !!this._optionsOverlayContentsRef;
+    return !!this._optionsOverlayRef;
   }
 
   /**
@@ -172,7 +169,7 @@ export class SearchSelectComponent extends CustomFormControl<string> {
    * Get host element.
    */
   get element(): HTMLElement {
-    return this.elementRef.nativeElement;
+    return this._elementRef.nativeElement;
   }
 
   /**
@@ -237,10 +234,8 @@ export class SearchSelectComponent extends CustomFormControl<string> {
       // `_search` value in `input` element.
       this._focused = true;
 
-      this._optionsOverlayContentsRef = this.overlayService
-        .drawComponent<SearchSelectOptionsComponent, SearchSelectOptionsData, string | undefined>({
-          id: this.overlayOutlet.id,
-          component: SearchSelectOptionsComponent,
+      this._optionsOverlayRef = this._overlayService
+        .open<SearchSelectOptionsComponent, SearchSelectOptionsData, string | undefined>(SearchSelectOptionsComponent, {
           data: {
             options: this._options,
             value: this._value,
@@ -254,7 +249,7 @@ export class SearchSelectComponent extends CustomFormControl<string> {
             // Clear `_focused` state and `_search` text.
             this._search = '';
             this._focused = false;
-            this._optionsOverlayContentsRef = null;
+            this._optionsOverlayRef = null;
 
             this.markAsTouched();
             this._emitSearchChange();
@@ -277,8 +272,8 @@ export class SearchSelectComponent extends CustomFormControl<string> {
    * The `y` position should be updated as well because the height of options can be changed.
    */
   private _updateFilteredOptionsAndPosition(filteredOptions: OptionItem<string>[]): void {
-    this._optionsOverlayContentsRef?.component.instance.updateOptions(filteredOptions);
-    this._optionsOverlayContentsRef?.component.instance.updatePosition();
+    this._optionsOverlayRef?.componentRef.instance.updateOptions(filteredOptions);
+    this._optionsOverlayRef?.componentRef.instance.updatePosition();
   }
 
   /**

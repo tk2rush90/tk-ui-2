@@ -7,8 +7,15 @@
   @include top-left;
   position: fixed;
   display: block;
-  z-index: 1001;
-  // The outlet covers the window.
-  // To prevent interrupting user actions by this component, set `pointer-event: none`.
+  z-index: 1000;
   pointer-events: none;
+  overflow: auto;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  &.tk-has-opened {
+    pointer-events: all;
+  }
 }

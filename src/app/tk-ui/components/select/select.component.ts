@@ -3,7 +3,7 @@ import {CustomFormControl} from '@tk-ui/bases/custom-form-control/custom-form-co
 import {NgControl} from '@angular/forms';
 import {OptionItem} from '@tk-ui/models/option-item';
 import {AvailableKey, EventUtil} from '@tk-ui/utils/event.util';
-import {OverlayContentsRef, OverlayService} from '@tk-ui/components/overlay/overlay.service';
+import {OverlayRef, OverlayService} from '@tk-ui/components/overlay/overlay.service';
 import {
   SelectOptionsComponent,
   SelectOptionsData
@@ -17,9 +17,6 @@ import {OverlayOutletComponent} from '@tk-ui/components/overlay/overlay-outlet/o
   selector: 'app-select',
   templateUrl: './select.component.html',
   styleUrls: ['./select.component.scss'],
-  providers: [
-    OverlayService,
-  ],
 })
 export class SelectComponent extends CustomFormControl<string> {
   /**
@@ -65,12 +62,12 @@ export class SelectComponent extends CustomFormControl<string> {
   /**
    * The overlay contents for options.
    */
-  private _optionsOverlayContentsRef: OverlayContentsRef<SelectOptionsComponent, string | undefined> | null = null;
+  private _optionsOverlayRef: OverlayRef<SelectOptionsComponent, SelectOptionsData, string | undefined> | null = null;
 
   constructor(
     @Self() @Optional() public override ngControl: NgControl,
-    private elementRef: ElementRef<HTMLElement>,
-    private overlayService: OverlayService,
+    private _elementRef: ElementRef<HTMLElement>,
+    private _overlayService: OverlayService,
   ) {
     super(ngControl);
   }
@@ -90,7 +87,7 @@ export class SelectComponent extends CustomFormControl<string> {
    */
   @HostBinding('class.tk-opened')
   get opened(): boolean {
-    return !!this._optionsOverlayContentsRef;
+    return !!this._optionsOverlayRef;
   }
 
   /**
@@ -111,7 +108,7 @@ export class SelectComponent extends CustomFormControl<string> {
    * Get host element.
    */
   get element(): HTMLElement {
-    return this.elementRef.nativeElement;
+    return this._elementRef.nativeElement;
   }
 
   /**
@@ -183,10 +180,8 @@ export class SelectComponent extends CustomFormControl<string> {
    */
   openOptions(): void {
     if (!this.opened && !this.disabled) {
-      this._optionsOverlayContentsRef = this.overlayService
-        .drawComponent<SelectOptionsComponent, SelectOptionsData, string | undefined>({
-          id: this.overlayOutlet.id,
-          component: SelectOptionsComponent,
+      this._optionsOverlayRef = this._overlayService
+        .open<SelectOptionsComponent, SelectOptionsData, string | undefined>(SelectOptionsComponent, {
           data: {
             options: this._options,
             value: this._value,
@@ -198,7 +193,7 @@ export class SelectComponent extends CustomFormControl<string> {
             }
 
             this.markAsTouched();
-            this._optionsOverlayContentsRef = null;
+            this._optionsOverlayRef = null;
           },
         });
     }
@@ -209,7 +204,7 @@ export class SelectComponent extends CustomFormControl<string> {
    */
   private _closeOptions(): void {
     if (this.opened) {
-      this.overlayService.clearOverlay(this.overlayOutlet.id);
+      this._optionsOverlayRef!.close();
     }
   }
 

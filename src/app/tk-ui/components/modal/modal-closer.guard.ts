@@ -23,10 +23,10 @@ export class ModalCloserGuard implements CanDeactivate<unknown> {
    * @param currentState - The current `RouterStateSnapshot`.
    */
   canDeactivate(currentState: RouterStateSnapshot): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
-    const hasOpenedModal = this.modalService.hasOpenedModal;
+    const hasOpenedModal = this.modalService.hasOpenedModals;
 
     if (hasOpenedModal) {
-      this.modalService.closeLatest();
+      this.modalService.closeLatest(true);
       this.router.navigateByUrl(currentState.url);
     }
 
