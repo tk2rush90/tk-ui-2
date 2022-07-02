@@ -32,6 +32,11 @@ export interface OverlayOpenOptions<D = undefined, R = undefined> {
    * Injector to override default injector of overlay.
    */
   injector?: Injector;
+
+  /**
+   * Backdrop to override.
+   */
+  backdrop?: Type<any>;
 }
 
 /**
@@ -70,6 +75,13 @@ export class OverlayService implements OnDestroy {
     return Object.keys(this._openedOverlays).length > 0;
   }
 
+  /**
+   * Get opened overlays.
+   */
+  get openedOverlays(): OverlayRef<any>[] {
+    return this._openedOverlays;
+  }
+
   ngOnDestroy(): void {
     this.unregisterOverlayOutlet();
   }
@@ -98,6 +110,15 @@ export class OverlayService implements OnDestroy {
   }
 
   /**
+   * Add opened overlay.
+   * @param overlayRef - `OverlayRef`.
+   */
+  addOpenedOverlay(overlayRef: OverlayRef<any>): void {
+    this._openedOverlays.push(overlayRef);
+    this._subscribeOverlayClosed(overlayRef);
+  }
+
+  /**
    * Open overlay.
    * @param component - A component to open as an overlay.
    * @param options - Options for opening overlay.
@@ -113,8 +134,7 @@ export class OverlayService implements OnDestroy {
       options,
     );
 
-    this._openedOverlays.push(overlayRef);
-    this._subscribeOverlayClosed(overlayRef);
+    this.addOpenedOverlay(overlayRef);
 
     return overlayRef;
   }
@@ -194,22 +214,22 @@ export class OverlayRef<C, D = any, R = any> {
   /**
    * Reference to an overlay component.
    */
-  private readonly _componentRef: ComponentRef<C>;
+  protected _componentRef: ComponentRef<C>;
 
   /**
    * Reference to an overlay backdrop.
    */
-  private readonly _backdropRef: ComponentRef<OverlayBackdropComponent>;
+  protected _backdropRef: ComponentRef<any>;
 
   constructor(
-    private _viewContainerRef: ViewContainerRef,
-    private _component: Type<C>,
-    private _options: OverlayOpenOptions<D, R>,
+    protected _viewContainerRef: ViewContainerRef,
+    protected _component: Type<C>,
+    protected _options: OverlayOpenOptions<D, R>,
   ) {
     const injector = this._createInjector();
 
     // Create backdrop.
-    this._backdropRef = this._viewContainerRef.createComponent(OverlayBackdropComponent, {
+    this._backdropRef = this._viewContainerRef.createComponent(_options.backdrop || OverlayBackdropComponent, {
       injector,
     });
 
@@ -252,7 +272,7 @@ export class OverlayRef<C, D = any, R = any> {
   /**
    * Create an injector.
    */
-  private _createInjector(): Injector {
+  protected _createInjector(): Injector {
     return this._options.injector || Injector.create({
       providers: [
         {

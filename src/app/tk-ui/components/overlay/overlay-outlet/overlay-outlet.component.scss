@@ -12,6 +12,11 @@
   display: block;
   pointer-events: none;
   z-index: 1001;
+  overflow: auto;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 
   &.tk-has-opened {
     pointer-events: auto;

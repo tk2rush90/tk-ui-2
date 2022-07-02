@@ -2,6 +2,7 @@ import {Component, HostBinding, Input} from '@angular/core';
 import {MathUtil} from '@tk-ui/utils/math.util';
 import {animate, AnimationEvent, state, style, transition, trigger} from '@angular/animations';
 import {FADE_IN_OUT_ANIMATION_NAME, fadeInOut, FadeInOutState} from '@tk-ui/animations/fade-in-out';
+import {PlatformService} from '@tk-ui/services/universal/platform.service';
 
 /**
  * The spinner component.
@@ -114,6 +115,11 @@ export class SpinnerComponent {
     },
   };
 
+  constructor(
+    private _platformService: PlatformService,
+  ) {
+  }
+
   /**
    * Get `viewBox` of spinner svg.
    */
@@ -140,6 +146,15 @@ export class SpinnerComponent {
    */
   get dashArray(): number {
     return MathUtil.getCircleRoundLength(this.radius);
+  }
+
+  /**
+   * Get state of whether platform is browser or not.
+   * An animation for spinner will cause an error from `server` platform.
+   * So, do not display `<svg>` content when platform is not `browser`.
+   */
+  get isBrowser(): boolean {
+    return this._platformService.isBrowser;
   }
 
   /**

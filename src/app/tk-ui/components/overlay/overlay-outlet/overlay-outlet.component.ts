@@ -10,6 +10,7 @@ import {
 import {RandomUtil} from '@tk-ui/utils/random.util';
 import {OverlayService} from '@tk-ui/components/overlay/overlay.service';
 import {AvailableKey, EventUtil} from '@tk-ui/utils/event.util';
+import {Router} from '@angular/router';
 
 /**
  * An outlet to render overlay component.
@@ -31,13 +32,15 @@ export class OverlayOutletComponent implements AfterViewInit, OnDestroy {
   id = RandomUtil.key();
 
   constructor(
+    private _router: Router,
     private _overlayService: OverlayService,
   ) { }
 
   /**
    * Bind opened state to class.
    */
-  @HostBinding('class.tk-has-opened') get hasOpened(): boolean {
+  @HostBinding('class.tk-has-opened')
+  get hasOpened(): boolean {
     return this._overlayService.hasOpenedOverlays;
   }
 

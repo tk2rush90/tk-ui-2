@@ -1,10 +1,9 @@
-import {ComponentRef, EventEmitter, Injectable, InjectionToken, Injector, Type, ViewContainerRef} from '@angular/core';
-import {ModalBackdropComponent} from '@tk-ui/components/modal/modal-backdrop/modal-backdrop.component';
+import {ComponentRef, Injectable, InjectionToken, Injector, Type, ViewContainerRef} from '@angular/core';
 import {Modal} from '@tk-ui/components/modal/modal/modal.component';
 import {SubscriptionService} from '@tk-ui/services/common/subscription.service';
-import {RandomUtil} from '@tk-ui/utils/random.util';
 import {ModalContainerComponent} from '@tk-ui/components/modal/modal-container/modal-container.component';
-import {ModalOutletComponent} from '@tk-ui/components/modal/modal-outlet/modal-outlet.component';
+import {OverlayOpenOptions, OverlayRef, OverlayService} from '@tk-ui/components/overlay/overlay.service';
+import {ModalBackdropComponent} from '@tk-ui/components/modal/modal-backdrop/modal-backdrop.component';
 
 /**
  * Modal creation options.
@@ -12,27 +11,11 @@ import {ModalOutletComponent} from '@tk-ui/components/modal/modal-outlet/modal-o
  * Generic `D` is data to pass to modal component.
  * Generic `R` is returning data type of modal.
  */
-export interface ModalOpenOptions<D = any, R = any> {
-  /**
-   * The data to pass to modal.
-   */
-  data?: D;
-
+export interface ModalOpenOptions<D = any, R = any> extends OverlayOpenOptions<D, R> {
   /**
    * Set `true` to prevent user to close the modal by clicking backdrop or pressing `Escape`.
    */
   preventClosing?: boolean;
-
-  /**
-   * The callback function which will be called after modal closed.
-   * @param res - The response data.
-   */
-  onClose?: (res?: R) => void;
-
-  /**
-   * Injector to override default injector of modal.
-   */
-  injector?: Injector;
 }
 
 /**
@@ -44,17 +27,9 @@ export interface ModalOpenOptions<D = any, R = any> {
   providedIn: 'root'
 })
 export class ModalService {
-  /**
-   * A modal outlet.
-   */
-  private _modalOutlet?: ModalOutletComponent;
-
-  /**
-   * A list of opened `ModalRef`.
-   */
-  private _openedModals: ModalRef<any>[] = [];
 
   constructor(
+    private _overlayService: OverlayService,
     private _subscriptionService: SubscriptionService,
   ) { }
 
@@ -62,37 +37,23 @@ export class ModalService {
    * Get the `ViewContainerRef` of `ModalOutletComponent`.
    */
   get viewContainerRef(): ViewContainerRef | undefined {
-    return this._modalOutlet?.viewContainerRef;
+    return this._overlayService.viewContainerRef;
   }
 
   /**
    * Get state of having opened modals.
    */
   get hasOpenedModals(): boolean {
-    return this._openedModals.length > 0;
+    return this.openedModals.length > 0;
   }
 
   /**
-   * Register the modal outlet.
-   * @param outlet - The outlet component.
+   * Get opened modals.
    */
-  registerModalOutlet(outlet: ModalOutletComponent): void {
-    // Only a single outlet can be registered.
-    // If trying to register outlet when there's already registered outlet,
-    // throw the error.
-    if (this._modalOutlet) {
-      throw new Error('Only a single modal outlet can be registered');
-    }
-
-    this._modalOutlet = outlet;
-  }
-
-  /**
-   * Unregister the modal outlet.
-   */
-  unregisterModalOutlet(): void {
-    this.closeAll();
-    this._modalOutlet = undefined;
+  get openedModals(): ModalRef<any>[] {
+    return this._overlayService
+      .openedOverlays
+      .filter(overlayRef => overlayRef instanceof ModalRef) as ModalRef<any>[];
   }
 
   /**
@@ -102,18 +63,19 @@ export class ModalService {
    */
   open<C extends Modal, D = any, R = any>(component: Type<C>, options: ModalOpenOptions<D, R>): ModalRef<C, D, R> {
     if (!this.viewContainerRef) {
-      throw new Error('No `ViewContainerRef` to open modal. Maybe modal outlet is not registered.');
+      throw new Error('No `ViewContainerRef` to open modal. Maybe overlay outlet is not registered.');
     }
 
     const modalRef = new ModalRef(
       this.viewContainerRef,
+      {
+        ...options,
+        backdrop: ModalBackdropComponent,
+      },
       component,
-      options,
     );
 
-    this._openedModals.push(modalRef);
-    this._subscribeModalClosed(modalRef);
-
+    this._overlayService.addOpenedOverlay(modalRef);
 
     return modalRef;
   }
@@ -123,7 +85,7 @@ export class ModalService {
    * @param force - Force to close the latest modal. It will ignore `preventClosing` option.
    */
   closeLatest(force = false): void {
-    const modalRef = this._openedModals.pop();
+    const modalRef = this.openedModals.pop();
 
     if (modalRef) {
       // When modal has `preventClosing` to `true`, only can be closed with `force` option.
@@ -141,36 +103,7 @@ export class ModalService {
    * Close all modals.
    */
   closeAll(): void {
-    this._openedModals.forEach(modalRef => modalRef.close());
-  }
-
-  /**
-   * Subscribe `closed` emitter of modal.
-   * @param modalRef - A modal to subscribe.
-   */
-  private _subscribeModalClosed(modalRef: ModalRef<any>): void {
-    const sub = modalRef.closed.subscribe(() => {
-      this._destroyModalRef(modalRef);
-    });
-
-    this._subscriptionService.store(`_subscribeModalClosed${modalRef.id}`, sub);
-  }
-
-  /**
-   * Destroy `ModalRef`.
-   * @param modalRef - An `ModalRef` to destroy.
-   */
-  private _destroyModalRef<R = undefined>(modalRef: ModalRef<any>): void {
-    const index = this._openedModals.indexOf(modalRef);
-
-    if (index !== -1) {
-      this._openedModals.splice(index, 1);
-    }
-
-    modalRef.backdropRef.destroy();
-    modalRef.containerRef.destroy();
-
-    this._subscriptionService.unSubscribe(`_subscribeModalClosed${modalRef.id}`);
+    this.openedModals.forEach(modalRef => modalRef.close());
   }
 }
 
@@ -187,56 +120,29 @@ export const MODAL_DATA = new InjectionToken<any>('ModalData');
 /**
  * The `ModalRef` refers to created modal.
  */
-export class ModalRef<C extends Modal, D = any, R = any> {
-  /**
-   * Closed emitter.
-   */
-  closed = new EventEmitter<void>();
-
-  /**
-   * A modal id.
-   */
-  readonly id = RandomUtil.key();
-
-  /**
-   * Reference to a modal component.
-   */
-  private readonly _componentRef: ComponentRef<C>;
-
+export class ModalRef<C extends Modal, D = any, R = any> extends OverlayRef<ModalContainerComponent, D, R> {
   /**
    * Reference to a modal container.
    */
-  private readonly _containerRef: ComponentRef<ModalContainerComponent>;
-
-  /**
-   * Reference to a modal backdrop.
-   */
-  private readonly _backdropRef: ComponentRef<ModalBackdropComponent>;
+  private readonly _contentsRef: ComponentRef<C>;
 
   constructor(
-    private _viewContainerRef: ViewContainerRef,
-    private _component: Type<C>,
-    private _options: ModalOpenOptions<D, R>,
+    protected override _viewContainerRef: ViewContainerRef,
+    protected override _options: ModalOpenOptions<D, R>,
+    private _contents: Type<C>,
   ) {
-    const injector = this._createInjector();
-
-    // Create backdrop.
-    this._backdropRef = this._viewContainerRef.createComponent(ModalBackdropComponent);
-    this._backdropRef.changeDetectorRef.detectChanges();
-
-    // Create container.
-    this._containerRef = this._viewContainerRef.createComponent(ModalContainerComponent, {
-      injector,
-    });
-
-    this._containerRef.changeDetectorRef.detectChanges();
+    super(
+      _viewContainerRef,
+      ModalContainerComponent,
+      _options,
+    );
 
     // Create component. A component will be wrapped in the container.
-    this._componentRef = this._containerRef.instance.viewContainerRef.createComponent(this._component, {
-      injector,
+    this._contentsRef = this._componentRef.instance.viewContainerRef.createComponent(this._contents, {
+      injector: this._createInjector(),
     });
 
-    this._componentRef.changeDetectorRef.detectChanges();
+    this._contentsRef.changeDetectorRef.detectChanges();
   }
 
   /**
@@ -247,42 +153,16 @@ export class ModalRef<C extends Modal, D = any, R = any> {
   }
 
   /**
-   * Getter for `_componentRef`.
+   * Getter for `_contentsRef`.
    */
-  get componentRef(): ComponentRef<C> {
-    return this._componentRef;
-  }
-
-  /**
-   * Getter for `_containerRef`.
-   */
-  get containerRef(): ComponentRef<ModalContainerComponent> {
-    return this._containerRef;
-  }
-
-  /**
-   * Getter for `_backdropRef`.
-   */
-  get backdropRef(): ComponentRef<any> {
-    return this._backdropRef;
-  }
-
-  /**
-   * Emit closed emitter of this modal.
-   * @param result - The result data.
-   */
-  close(result?: R): void {
-    if (this._options.onClose) {
-      this._options.onClose(result);
-    }
-
-    this.closed.emit();
+  get contentsRef(): ComponentRef<C> {
+    return this._contentsRef;
   }
 
   /**
    * Create an injector.
    */
-  private _createInjector(): Injector {
+  protected override _createInjector(): Injector {
     return this._options.injector || Injector.create({
       providers: [
         {
