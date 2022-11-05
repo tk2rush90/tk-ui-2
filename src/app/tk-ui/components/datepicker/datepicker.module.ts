@@ -9,7 +9,7 @@ import {OverlayModule} from '@tk-ui/components/overlay/overlay.module';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {RippleModule} from '@tk-ui/components/ripple/ripple.module';
 import {FlatButtonModule} from '@tk-ui/components/flat-button/flat-button.module';
-import {IsSameDatePipeModule} from '@tk-ui/pipes/is-smae-date-pipe/is-same-date-pipe.module';
+import {IsSameDatePipeModule} from '@tk-ui/pipes/is-same-date-pipe/is-same-date-pipe.module';
 
 
 @NgModule({

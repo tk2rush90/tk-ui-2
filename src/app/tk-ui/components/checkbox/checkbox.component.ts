@@ -1,7 +1,8 @@
-import {Component, HostBinding, HostListener, Optional, Self} from '@angular/core';
+import {Component, HostBinding, HostListener, Input, Optional, Self} from '@angular/core';
 import {CustomFormControl} from '@tk-ui/bases/custom-form-control/custom-form-control.directive';
 import {NgControl} from '@angular/forms';
 import {AvailableKey, EventUtil} from '@tk-ui/utils/event.util';
+import {scaleInOut} from '@tk-ui/animations/scale-in-out';
 
 /**
  * Checkbox control alternates to `<input type="checkbox"/>`.
@@ -9,9 +10,17 @@ import {AvailableKey, EventUtil} from '@tk-ui/utils/event.util';
 @Component({
   selector: 'app-checkbox',
   templateUrl: './checkbox.component.html',
-  styleUrls: ['./checkbox.component.scss']
+  styleUrls: ['./checkbox.component.scss'],
+  animations: [
+    scaleInOut,
+  ],
 })
 export class CheckboxComponent extends CustomFormControl<boolean> {
+  /**
+   * Label.
+   */
+  @Input() label = '';
+
   /**
    * Disabled state.
    */

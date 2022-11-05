@@ -163,9 +163,14 @@ export class SelectComponent extends CustomFormControl<string> {
    */
   @HostListener('blur')
   onHostBlur(): void {
-    this.focused = false;
-    this.markAsTouched();
-    this._closeOptions();
+    // If options are opened, prevent 'blur' event of this component.
+    // The 'blur' event only allowed when options are closed.
+    if (this.opened) {
+      this.focusToHost();
+    } else {
+      this.focused = false;
+      this.markAsTouched();
+    }
   }
 
   /**

@@ -3,17 +3,8 @@
 
 // Checkbox.
 :host {
-  @include flex(center, center);
-  @include box(24px);
-  @include border(1px solid black);
-  border-radius: 5px;
-  background-color: white;
-  cursor: pointer;
-  user-select: none;
-
-  app-icon {
-    @include box(14px);
-  }
+  // To show label on the next to the checkbox.
+  @include flex(center);
 
   // Focused state.
   &:focus {
@@ -31,4 +22,25 @@
 
     }
   }
+}
+
+// Checkbox.
+.tk-checkbox {
+  @include flex(center, center);
+  @include box(24px);
+  @include border(1px solid $black);
+  border-radius: 5px;
+  background-color: white;
+  cursor: pointer;
+  user-select: none;
+  transition: border .12s;
+}
+
+app-icon {
+  @include box(14px);
+}
+
+// Label.
+.tk-label {
+  margin-left: 5px;
 }

@@ -1,4 +1,13 @@
-<!-- check sign -->
-<app-icon
-  *ngIf="checked"
-  name="default-check"></app-icon>
+<div class="tk-checkbox">
+  <!-- check sign -->
+  <app-icon
+    *ngIf="checked"
+    [@scale-in-out]="'show'"
+    name="done"></app-icon>
+</div>
+
+<div
+  *ngIf="label"
+  class="tk-label">
+  {{label}}
+</div>

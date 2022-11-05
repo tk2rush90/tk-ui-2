@@ -3,7 +3,7 @@ import {NumberLike} from '@tk-ui/others/types';
 export class ParsingUtil {
   /**
    * Parse non integer to integer.
-   * @param value - - Value to parse.
+   * @param value - Value to parse.
    * @example
    * ParsingUtil.toInteger('3'); // 3
    * ParsingUtil.toInteger('3,000'); // 3000

@@ -1,16 +1,10 @@
 import {Inject, Injectable} from '@angular/core';
 import {Meta, MetaDefinition, Title} from '@angular/platform-browser';
-import {DOCUMENT, Location} from '@angular/common';
+import {DOCUMENT} from '@angular/common';
 
-export interface SEOProperties {
-  title?: string;
-  author?: string;
-  description?: string;
-  canonical?: string;
-  thumbnail?: string;
-  keywords?: string[];
-}
-
+/**
+ * Handle meta tags for SEO.
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -22,130 +16,202 @@ export class SeoService {
   private _origin = '';
 
   constructor(
-    @Inject(DOCUMENT) private document: Document,
-    @Inject(Location) private location: Location,
-    private title: Title,
-    private meta: Meta,
+    @Inject(DOCUMENT) private _document: Document,
+    private _title: Title,
+    private _meta: Meta,
   ) {
   }
 
   /**
-   * Update SEO properties.
-   * @param properties - SEO properties to update.
+   * Set default meta values.
    */
-  update(properties: SEOProperties = {}): void {
-    let {
-      title = '',
-      author = '',
-      description = '',
-      canonical = '',
-      thumbnail = '',
-      keywords = [],
-    } = properties;
+  setDefault(): void { }
 
-    // Set Twitter default meta tag.
+  /**
+   * Set `<title></title>`.
+   * @param title - Title of page.
+   */
+  setTitle(title: string): void {
+    this._title.setTitle(title);
+  }
+
+  /**
+   * Set `<meta name="twitter:title"/>.
+   * @param title - Title for twitter.
+   */
+  setTwitterTitle(title: string): void {
+    this._addOrUpdateTag('name', 'twitter:title', {
+      name: 'twitter:title',
+      content: title,
+    });
+  }
+
+  /**
+   * Set `<meta property="og:title"/>.
+   * @param title - Title for OpenGraph.
+   */
+  setOgTitle(title: string): void {
+    this._addOrUpdateTag('property', 'og:title', {
+      property: 'og:title',
+      content: title,
+    });
+  }
+
+  /**
+   * Set `<meta name="twitter:card"/>.
+   * @param card - Card type for twitter.
+   */
+  setTwitterCard(card = 'summary_large_image'): void {
     this._addOrUpdateTag('name', 'twitter:card', {
       name: 'twitter:card',
-      content: 'summary_large_image',
+      content: card,
     });
+  }
 
-    // Set OpenGraph default meta tag.
+  /**
+   * Set `<meta property="og:type"/>.
+   * @param type - Type for OpenGraph.
+   */
+  setOgType(type = 'website'): void {
     this._addOrUpdateTag('property', 'og:type', {
       property: 'og:type',
-      content: 'website',
+      content: type,
     });
+  }
 
-    // Update title.
-    if (title) {
-      // Update default title.
-      this.title.setTitle(title);
+  /**
+   * Set `<meta name="author"/>.
+   * @param author - Author of website.
+   */
+  setAuthor(author: string): void {
+    this._addOrUpdateTag('name', 'author', {
+      name: 'author',
+      content: author,
+    });
+  }
 
-      // Update twitter title meta tag.
-      this._addOrUpdateTag('name', 'twitter:title', {
-        name: 'twitter:title',
-        content: title,
-      });
+  /**
+   * Set `<meta name="twitter:site"/>.
+   * @param site - Username of website owner.
+   */
+  setTwitterSite(site: string): void {
+    this._addOrUpdateTag('name', 'twitter:site', {
+      name: 'twitter:site',
+      content: site,
+    });
+  }
 
-      // Update OpenGraph title meta tag.
-      this._addOrUpdateTag('property', 'og:title', {
-        property: 'og:title',
-        content: title,
-      });
-    }
+  /**
+   * Set `<meta name="twitter:creator"/>
+   * @param creator - Username of page contents creator.
+   */
+  setTwitterCreator(creator: string): void {
+    this._addOrUpdateTag('name', 'twitter:creator', {
+      name: 'twitter:creator',
+      content: creator,
+    });
+  }
 
-    // Update author.
-    if (author) {
-      // Update default author meta tag.
-      this._addOrUpdateTag('name', 'author', {
-        name: 'author',
-        content: author,
-      });
+  /**
+   * Set `<meta name="description"/>.
+   * @param description - Description of page.
+   */
+  setDescription(description: string): void {
+    this._addOrUpdateTag('name', 'description', {
+      name: 'description',
+      content: description,
+    });
+  }
 
-      // Update Twitter creator meta tag.
-      this._addOrUpdateTag('name', 'twitter:creator', {
-        name: 'twitter:creator',
-        content: author,
-      });
-    }
+  /**
+   * Set `<meta name="twitter:description"/>.
+   * @param description - Description for Twitter.
+   */
+  setTwitterDescription(description: string): void {
+    this._addOrUpdateTag('name', 'twitter:description', {
+      name: 'twitter:description',
+      content: description,
+    });
+  }
 
-    // Update description.
-    if (description) {
-      // Update default description meta tag.
-      this._addOrUpdateTag('name', 'description', {
-        name: 'description',
-        content: description,
-      });
+  /**
+   * Set `<meta name="og:description"/>.
+   * @param description - Description for OpenGraph.
+   */
+  setOgDescription(description: string): void {
+    this._addOrUpdateTag('property', 'og:description', {
+      property: 'og:description',
+      content: description,
+    });
+  }
 
-      // Update OpenGraph description meta tag.
-      this._addOrUpdateTag('property', 'og:description', {
-        property: 'og:description',
-        content: description,
-      });
+  /**
+   * Set <link rel="canonical"/>.
+   * @param canonical - Canonical url for page.
+   */
+  setCanonical(canonical: string): void {
+    const link: HTMLLinkElement = this._document.querySelector(`link[rel='canonical']`) || this._document.createElement('link');
 
-      // Update Twitter description meta tag.
-      this._addOrUpdateTag('name', 'twitter:description', {
-        name: 'twitter:description',
-        content: description,
-      });
-    }
+    link.setAttribute('rel', 'canonical');
+    link.setAttribute('href', this._origin + canonical);
 
-    // Update canonical url.
-    if (canonical) {
-      // Add or update canonical link tag.
-      const link: HTMLLinkElement = this.document.querySelector(`link[rel='canonical']`) || this.document.createElement('link');
+    this._document.head.appendChild(link);
+  }
 
-      link.setAttribute('rel', 'canonical');
-      link.setAttribute('href', this._origin + canonical);
+  /**
+   * Set `<meta property="og:url"/>.
+   * @param url - Url for OpenGraph.
+   */
+  setOgUrl(url: string): void {
+    this._addOrUpdateTag('property', 'og:url', {
+      property: 'og:url',
+      content: this._origin + url,
+    });
+  }
 
-      // Update OpenGraph url meta tag.
-      this._addOrUpdateTag('property', 'og:url', {
-        property: 'og:url',
-        content: this._origin + canonical,
-      });
-    }
+  /**
+   * Set `<meta name="twitter:image"/>.
+   * @param image - Image url for Twitter card.
+   *   For "Summary card with large image" type, it supports an image with 2:1 aspect ratio.
+   *   The minimum dimension is 300x157 and maximum is 4096x4096.
+   *   Image size should be less than 5mb.
+   */
+  setTwitterImage(image: string): void {
+    this._addOrUpdateTag('name', 'twitter:image', {
+      name: 'twitter:image',
+      content: image,
+    });
+  }
 
-    // Update thumbnail.
-    if (thumbnail) {
-      // Update Twitter thumbnail meta tag.
-      this._addOrUpdateTag('name', 'twitter:image', {
-        name: 'twitter:image',
-        content: this._origin + thumbnail,
-      });
+  /**
+   * Set `<meta property="og:image"/>.
+   * @param image - Image url for OpenGraph.
+   *   The minimum dimension is 200x200 and image size should be less than 8mb.
+   *   Recommended dimension is 1200x630.
+   */
+  setOgImage(image: string): void {
+    this._addOrUpdateTag('property', 'og:image', {
+      property: 'og:image',
+      content: image,
+    });
+  }
 
-      // Update OpenGraph thumbnail meta tag.
-      this._addOrUpdateTag('property', 'og:image', {
-        property: 'og:image',
-        content: this._origin + thumbnail,
-      });
-    }
+  /**
+   * Set `<meta name="keywords"/>.
+   * @param keywords - Keywords of page.
+   */
+  setKeywords(keywords: string[]): void {
+    this._addOrUpdateTag('name', 'keywords', {
+      name: 'keywords',
+      content: keywords.join(','),
+    });
+  }
 
-    // Update default keywords meta tag.
-    if (keywords.length > 0) {
-      this._addOrUpdateTag('name', 'keywords', {
-        name: 'keywords',
-        content: keywords.join(','),
-      });
-    }
+  /**
+   * Remove `<meta name="twitter:creator"/>.
+   */
+  removeTwitterCreator(): void {
+    this._meta.removeTag(`name='twitter:creator'`);
   }
 
   /**
@@ -155,10 +221,10 @@ export class SeoService {
    * @param definition - The meta tag definition.
    */
   private _addOrUpdateTag(selector: keyof MetaDefinition, value: string, definition: MetaDefinition): void {
-    if (this.meta.getTag(`${selector}="${value}"`)) {
-      this.meta.updateTag(definition);
+    if (this._meta.getTag(`${selector}="${value}"`)) {
+      this._meta.updateTag(definition);
     } else {
-      this.meta.addTag(definition);
+      this._meta.addTag(definition);
     }
   }
 }

@@ -192,3 +192,115 @@
     }
   }
 }
+
+// Mixin for default arrow to extend.
+@mixin arrow-default {
+  &::after {
+    content: '';
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none;
+    @content;
+  }
+}
+
+// Render top directed arrow.
+@mixin top-arrow($size, $color) {
+  @include arrow-default {
+    bottom: 100%;
+    left: 50%;
+    border: solid $size transparent;
+    border-bottom-color: $color;
+    margin-left: -$size;
+  }
+}
+
+// Render left directed arrow.
+@mixin left-arrow($size, $color) {
+  @include arrow-default {
+    right: 100%;
+    top: 50%;
+    border: solid $size transparent;
+    border-right-color: $color;
+    margin-top: -$size;
+  }
+}
+
+// Render bottom directed arrow.
+@mixin bottom-arrow($size, $color) {
+  @include arrow-default {
+    top: 100%;
+    left: 50%;
+    border: solid $size transparent;
+    border-top-color: $color;
+    margin-left: -$size;
+  }
+}
+
+// Render right directed arrow.
+@mixin right-arrow($size, $color) {
+  @include arrow-default {
+    left: 100%;
+    top: 50%;
+    border: solid $size transparent;
+    border-left-color: $color;
+    margin-top: -$size;
+  }
+}
+
+// Mixin for default arrow border to extend.
+@mixin arrow-border-default {
+  &::before {
+    content: '';
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none;
+    @content;
+  }
+}
+
+// Render top directed arrow border.
+@mixin top-arrow-border($size, $color) {
+  @include arrow-border-default {
+    bottom: 100%;
+    left: 50%;
+    border: solid $size transparent;
+    border-bottom-color: $color;
+    margin-left: -$size;
+  }
+}
+
+// Render left directed arrow border.
+@mixin left-arrow-border($size, $color) {
+  @include arrow-border-default {
+    right: 100%;
+    top: 50%;
+    border: solid $size transparent;
+    border-right-color: $color;
+    margin-top: -$size;
+  }
+}
+
+// Render bottom directed arrow border.
+@mixin bottom-arrow-border($size, $color) {
+  @include arrow-border-default {
+    top: 100%;
+    left: 50%;
+    border: solid $size transparent;
+    border-top-color: $color;
+    margin-left: -$size;
+  }
+}
+
+// Render right directed arrow border.
+@mixin right-arrow-border($size, $color) {
+  @include arrow-border-default {
+    left: 100%;
+    top: 50%;
+    border: solid $size transparent;
+    border-left-color: $color;
+    margin-top: -$size;
+  }
+}

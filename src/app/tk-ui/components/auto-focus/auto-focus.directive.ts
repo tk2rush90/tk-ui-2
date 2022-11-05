@@ -1,4 +1,4 @@
-import {AfterViewInit, Directive, ElementRef} from '@angular/core';
+import {AfterViewInit, ChangeDetectorRef, Directive, ElementRef} from '@angular/core';
 
 /**
  * Set focus to the host element on view init.
@@ -10,10 +10,12 @@ export class AutoFocusDirective implements AfterViewInit {
 
   constructor(
     protected elementRef: ElementRef<HTMLElement>,
+    protected changeDetectorRef: ChangeDetectorRef,
   ) { }
 
   ngAfterViewInit(): void {
     this.element.focus();
+    this.changeDetectorRef.detectChanges(); // To suppress error.
   }
 
   /**
